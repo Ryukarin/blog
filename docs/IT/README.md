@@ -1,5 +1,5 @@
 ---
-title: IT知识笔记
+title: IT 基础
 date: 2021-06-24
 tags:
  - IT基础知识

@@ -31,9 +31,9 @@ module.exports = config({
     nav: [
       { text: "主页", link: "/", icon: "home" },
       { text: "项目总览", link: "/project/", icon: "folder" },
-      { text: "博客随笔", link: "/blog/", icon: "blog" },
+      { text: "IT 基础", link: "/IT/", icon: "blog" },
       { text: "瞎搞折腾", link: "/operate/", icon: "operate" },
-      { text: "如何使用", link: "/guide/", icon: "creative" },
+//      { text: "如何使用", link: "/guide/", icon: "creative" },
 //      { text: "主题文档", link: "https://vuepress-theme-hope.github.io/zh/", icon: "note" },
     ],
 
@@ -41,14 +41,15 @@ module.exports = config({
 
 //===============================================================================================
 
+
     sidebar: {
     	"/": [
         "",
     	"project",
 
-		{ title: "如何使用", icon: "creative", prefix: "guide/", children: ["", "page", "markdown", "disable", "encrypt", "slides" ]},
+//		{ title: "如何使用", icon: "creative", prefix: "guide/", children: ["", "page", "markdown", "disable", "encrypt", "slides" ]},
 
-		{ title: "IT知识", icon: "blog", prefix: "blog/", children: ["", "FTP","SFTP", "git" ]},
+		{ title: "IT 基础", icon: "blog", prefix: "IT/", children: ["", "FTP","SFTP", "git" ]},
 
 		{ title: "瞎搞折腾", icon: "operate", prefix: "operate/", children: ["", "N1_armbian", "vuepress_blog"]},
 
