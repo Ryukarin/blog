@@ -1,5 +1,5 @@
 ---
-title: 瞎搞折腾
+title: 瞎折腾
 date: 2021-04-09
 tags:
  - blog

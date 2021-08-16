@@ -32,7 +32,7 @@ module.exports = config({
       { text: "主页", link: "/", icon: "home" },
       { text: "项目总览", link: "/project/", icon: "folder" },
       { text: "IT 基础", link: "/IT/", icon: "blog" },
-      { text: "瞎搞折腾", link: "/operate/", icon: "operate" },
+      { text: "瞎折腾", link: "/operate/", icon: "operate" },
 //      { text: "如何使用", link: "/guide/", icon: "creative" },
 //      { text: "主题文档", link: "https://vuepress-theme-hope.github.io/zh/", icon: "note" },
     ],
@@ -49,9 +49,9 @@ module.exports = config({
 
 //		{ title: "如何使用", icon: "creative", prefix: "guide/", children: ["", "page", "markdown", "disable", "encrypt", "slides" ]},
 
-		{ title: "IT 基础", icon: "blog", prefix: "IT/", children: ["", "FTP","SFTP", "git" ]},
+		{ title: "IT基础", icon: "blog", prefix: "IT/", children: ["", "FTP","SFTP", "git" ]},
 
-		{ title: "瞎搞折腾", icon: "operate", prefix: "operate/", children: ["", "N1_armbian", "vuepress_blog"]},
+		{ title: "瞎折腾", icon: "operate", prefix: "operate/", children: ["", "N1_armbian", "bky_P1", "XY_C1C5", "XY_C1C5_sj", "Q5", "MSG1500", "vuepress_blog"]},
 
 		{ title: "Linux基础知识", icon: "linux", prefix: "project/Linux_basic/", children: ["", "01.linux_atten", "02.linux_dir", "03.linux_basic" ,"04.linux_authority", "05.linux_help", "06.linux_search", "07.linux_compress", "08.linux_shutdown_reboot", "09.linux_net", "10.linux_text_edit", "11.linux_soft_install", "12.linux_user_group", "13.linux_other_auth", "14.linux_filesystem_manage"]},
 
