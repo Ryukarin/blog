@@ -1,9 +1,13 @@
 ---
-title: 斐逊N1刷armbian
+title: 【斐逊N1】Armbian
 date: 2021-03-18
+tags:
+ - 斐逊N1
+categories: 
+ - 折腾
 ---
 
-## 下载 armbian 镜像
+## 下载 Armbian 镜像
 
 下载地址：https://users.armbian.com/balbes150/arm-64/
 该地址为 armbian 官网 balbes150 大神专门为晶晨、全志、RK 芯片的盒子做的镜像，并且不断更新，更新后，原来的镜像都会被删除，所以如果觉得某个版本的镜像好，要自己备份。

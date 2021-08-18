@@ -4,7 +4,7 @@ icon: page
 # 这是文章的标题
 title: 页面配置
 # 设置作者
-author: Ms.Hope
+##author: Ms.Hope
 # 设置写作时间
 time: 2020-01-01
 # 一个页面只能有一个分类
@@ -14,11 +14,11 @@ tag:
   - 页面配置
   - 使用指南
 # 此页面会在文章列表指定
-sticky: true
+##sticky: true
 # 此页面会出现在首页的文章板块中
-star: true
+##star: true
 # 你可以自定义页脚
-footer: 这是测试显示的页脚
+##footer: 这是测试显示的页脚
 ---
 
 ## 页面信息

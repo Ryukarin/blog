@@ -2,9 +2,9 @@
 title: 瞎折腾
 date: 2021-04-09
 tags:
- - blog
+ - 矿渣
 categories: 
- - 随笔
+ - 折腾
 ---
 
 ## 瞎折腾那些事儿
@@ -32,8 +32,8 @@ categories:
 - open media vault
 - EmuELEC
 - Lakka
-- Open WRT
-- 老毛子Ppadavan
+- OpenWRT
+- 老毛子Padavan
 - Armbian
 - ......
 

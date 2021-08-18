@@ -1,5 +1,5 @@
 ---
-title: 固件编译---OpenWRT
+title: 【固件编译】OpenWRT
 date: 2021-04-09
 tags:
  - openwrt

@@ -1,5 +1,5 @@
 ---
-title: vuepress搭建博客并部署
+title: 【博客搭建】VuePress
 date: 2021-05-09
 tags:
  - blog

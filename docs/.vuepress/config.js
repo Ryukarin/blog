@@ -51,7 +51,7 @@ module.exports = config({
 
 		{ title: "IT基础", icon: "blog", prefix: "IT/", children: ["", "FTP","SFTP", "git" ]},
 
-		{ title: "瞎折腾", icon: "operate", prefix: "operate/", children: ["", "padavan", "openwrt", "N1_armbian", "bky_P1", "XY_C1C5", "XY_C1C5_sj", "Q5", "MSG1500", "vuepress_blog"]},
+		{ title: "瞎折腾", icon: "operate", prefix: "operate/", children: ["", "padavan", "openwrt", "N1_armbian", "bky_P1", "XY_C1C5", "XY_C1C5_sj", "AC_RM2100", "Q5", "MSG1500", "vuepress_blog"]},
 
 		{ title: "Linux基础知识", icon: "linux", prefix: "project/Linux_basic/", children: ["", "01.linux_atten", "02.linux_dir", "03.linux_basic" ,"04.linux_authority", "05.linux_help", "06.linux_search", "07.linux_compress", "08.linux_shutdown_reboot", "09.linux_net", "10.linux_text_edit", "11.linux_soft_install", "12.linux_user_group", "13.linux_other_auth", "14.linux_filesystem_manage"]},
 

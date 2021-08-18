@@ -1,5 +1,5 @@
 ---
-title: 固件编译---老毛子Padavan
+title: 【固件编译】Padavan
 date: 2021-04-09
 tags:
  - padavan
