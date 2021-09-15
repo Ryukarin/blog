@@ -21,6 +21,7 @@ module.exports = config({
   },
 
   themeConfig: {
+
     logo: "/logo.png",
 
     hostname: "https://vuepress-theme-hope-demo.mrhope.site",
@@ -51,7 +52,7 @@ module.exports = config({
 
 		{ title: "IT基础", icon: "blog", prefix: "IT/", children: ["", "FTP","SFTP", "git" ]},
 
-		{ title: "瞎折腾", icon: "operate", prefix: "operate/", children: ["", "padavan", "openwrt", "N1_armbian", "bky_P1", "XY_C1C5", "XY_C1C5_sj", "AC_RM2100", "Q5", "MSG1500", "vuepress_blog"]},
+		{ title: "瞎折腾", icon: "operate", prefix: "operate/", children: ["", "padavan", "openwrt", "N1_armbian", "bky_P1", "XY_C1C5", "XY_C1C5_sj", "AC_RM2100", "Q5", "MSG1500", "vuepress_blog", "kernel.img_change"]},
 
 		{ title: "Linux基础知识", icon: "linux", prefix: "project/Linux_basic/", children: ["", "01.linux_atten", "02.linux_dir", "03.linux_basic" ,"04.linux_authority", "05.linux_help", "06.linux_search", "07.linux_compress", "08.linux_shutdown_reboot", "09.linux_net", "10.linux_text_edit", "11.linux_soft_install", "12.linux_user_group", "13.linux_other_auth", "14.linux_filesystem_manage"]},
 
@@ -60,6 +61,8 @@ module.exports = config({
 		{ title: "Linux大杂烩", icon: "linux", prefix: "project/Linux_mix/", children: ["", "Linux_sed_grep_awk", ]},
 
 		{ title: "Shell笔记", icon: "shell", prefix: "project/Shell/", sidebarDepth: 3,  children: ["", "01.Shell_intro", "02.Shell_grammar", "03.Shell_format_out", "04.Shell_format_in", "05.Shell_var", "06.Shell_array", "07.Shell_operation", "08.Shell_if", "09.Shell_for", "10.Shell_while", "11.Shell_until", "12.Shell_case", "13.Shell_function", "14.Shell_regular", "15.Shell_grep", "16.Shell_sed", "17.Shell_awk", "18.Shell_monitor_script", "19.Shell_lamp_install_script"]},
+
+		{ title: "Docker笔记", icon: "geometry", prefix: "project/Docker/", children: ["", "01.docker", "02.docker", "03.docker", "04.docker", "05.docker", "06.docker", "07.docker", "08.docker"],},
 
 		{ title: "Git笔记", icon: "git", prefix: "project/Git/", children:["", "01.Git_install", "02.Git_config", "03.Git_workfllow", "04.Git_work_stage_git", "05.Git_init_repo", "06.Git_basic_opera" ,"07.Git_branch_manage", "08.Git_log", "09.Git_tag", "10.Git_remote", "11.Git_server"]},
 
