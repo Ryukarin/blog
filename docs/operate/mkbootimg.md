@@ -1,5 +1,5 @@
 ---
-title: 【kernel.img】解包打包
+title: 【bootimg】解包打包
 date: 2021-09-15
 tags:
  - 解包
