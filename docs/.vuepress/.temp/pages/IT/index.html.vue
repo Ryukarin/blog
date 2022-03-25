@@ -1,0 +1,24 @@
+<template><h2 id="it-基础知识" tabindex="-1"><a class="header-anchor" href="#it-基础知识" aria-hidden="true">#</a> IT 基础知识</h2>
+<p>就是平时遇到的最基本的知识，网罗到此处。包括各个方面：</p>
+<ul>
+<li>
+<p>Linux</p>
+</li>
+<li>
+<p>Windows</p>
+</li>
+<li>
+<p>各种系统</p>
+</li>
+<li>
+<p>网络</p>
+</li>
+<li>
+<p>各种协议</p>
+</li>
+<li>
+<p>等等......</p>
+</li>
+</ul>
+<p>都是之前学习或临时用到的时候，记的一些学习笔记。长时间没怎么用，再想用就已经忘的差不多了。所以，整理起来，以便日后方便查阅。</p>
+</template>

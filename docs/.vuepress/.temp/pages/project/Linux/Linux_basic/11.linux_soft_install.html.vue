@@ -1,0 +1,1226 @@
+<template><p>计算机没有安装操作系统，就是一坨废铁，不能实现任何功能；如果计算机安装了换作系统，但没有应用软件，也只是中看不中用的花瓶。所以我们需要学习软件的安装，只有安装了所需的软件，才能实现想要的功能。比如，想要上网就需要安装浏览器，想要看小电影就需要安装视频播放器。</p>
+<p>很多初学者会很困惑：Linux 中的软件安装方法是否和 Windows 中的软件安装方法一样呢？Windows 中的软件是否可以直接安装到 Linux 上呢？理想很美好,现实很骨感，答案是否定的，Linux 和 Windows 是完全不同的操作系统，软件包管理是截然不同的。有一个坏消息和一个好消息，坏消息是我们需要重新学习一种新的软件包管理方法，而且 Linux 软件包的管理要比 Windows 软件包的管理复杂得多；好消息是 Windows 下所有的软件都不能在 Linux 中识别，所以 Windows 中大量的木马和病毒也都无法感染 Linux。</p>
+<h2 id="软件包管理简介" tabindex="-1"><a class="header-anchor" href="#软件包管理简介" aria-hidden="true">#</a> 软件包管理简介</h2>
+<h3 id="软件包的分类" tabindex="-1"><a class="header-anchor" href="#软件包的分类" aria-hidden="true">#</a> 软件包的分类</h3>
+<p>Limux 下的软件包众多，而且几乎都是经 GPL 授权的，也就是说这些软件都免费，振奋人心吧？而且更棒的是，这些软件几乎都提供源代码（开源的），只要你愿意，就可以修改程序源代码，以符合个人的需求和习惯。当然，你要具备修改这些软件的能力才可以。</p>
+<p><strong>源码包</strong>到底是什么呢？其实就是软件工程师使用特定的格式和语法所书写的文本代码，是人写的计算机语言的指令，一般由英文单词组成。是不是有点晕？其实源代码程序就是程序员写的计算机指令，符合特定的格式和语法。那么，众所周知，计算机可以识别的是机器语言，也就是二进制语言，所以需要一名翻译官把 abcd 翻译成二进制机器语言。我们一般把这名翻译官称为<strong>编译器</strong>，它的作用就是把人能够识别的 abcd 翻译成二进制机器语言，让计算机可以识别并执行。</p>
+<p>源码包不用担心收费问题，但是我并不会 C 语言怎么办？那一大堆的源代码程序到底如何使用呢？这个源码包容易安装吗？源码包的安装因为要把源代码编译为二进制语言，所以安装的时间较长。比如，在 Windows 下大家可能安装过 QQ，现在的 QQ 功能较多，程序相对较大，大概有 60MB，但由于 QQ 并不是以源代码形式发布的，而是经过编译之后发布的，所以只需要几分钟并经过简单的配置就可以安装成功，安装时间较短（当然功能也基本不能自定义)。在 Linux 中安装一个 MySQL 数据库，这个数据库的压缩包大概有 23MB，需要多长时间呢？答案是 30 分钟左右（根据计算机硬件配置不同)。这样看来编译还是很浪费时间的，而且绝大多数用户并不熟悉写程序的语言，所以我们要祈祷程序不要报错，否则对初学者来讲很难解决。</p>
+<p>为了解决源码包的这些问题，在 Linux 中就出现了<strong>二进制包</strong>，也就是源码包经过编译之后的包。这种包因为编译过程在发布之前已经完成，所以用户安装时速度较快（和 Windows 下安装软件速度相当)，而且报错也大大减少。<u>二进制包是 Linux 下的默认安装软件包，所以有时我们也把二进制包称作默认安装软件包。</u>目前主要有两个系列的二进制包管理系统：一个是 Red Hat 上的 <strong>RPM 包管理系统</strong>：另一个是 Debian 和 Ubuntu 上的 <strong>DPKG 包管理系统</strong>。不过这两个系列的二进制包管理的原理与形式大同小异，可以触类旁通。</p>
+<p>说了这么多，到底源码包和二进制包哪个好呢？举个例子，我们想做一套家具，源码包就像所有的家具完全由自己动手手工打造（手工编译)，想要什么样的板材、油漆、颜色和样式都由自己决定（功能自定义，甚至可以修改源代码)。想想就觉得爽，完全不用被黑心的厂商所左右，而且不用担心质量问题（软件更适合自己的系统，效率更高，更加稳定)。但是，所花费的时间大大超过了买一套家具的时间（编译浪费时间)，而且我自己真的有做木工活这个能力吗（需要对源代码非常了解）？就算请别人定制好的家具，再由我自己组装，万一哪个部件不匹配（报错很难解决)，怎么办？那么二进制包呢？也是我需要一套家具，可是我去商场买了一套（安装简单)，家具都是现成的，不会有哪个部件不匹配，除非因为我没有量好尺寸而导致放不下（报错很少)。但是我完全不知道这套家具用的是什么材料、油漆是否合格，而且家具的样式也不能随意选择（软件基本不能自定义功能）。</p>
+<p>好了，通过这个例子大家可以了解源码包和二进制包有什么区别了吧，稍后会再解释一下每种包的特点。</p>
+<h3 id="源码包的特点" tabindex="-1"><a class="header-anchor" href="#源码包的特点" aria-hidden="true">#</a> 源码包的特点</h3>
+<p>源码包既然是软件包，就不会是一个文件，而是多个文件的集合。出于发行的需要，我们一般会把源码包打包压缩之后发布，而 Linux 中最常用的打包压缩格式是“*.tar.gz”，所以我们也把源码包叫作 Tarball。源码包需要大家自己去软件的官方网站进行下载。</p>
+<p>源码包的压缩包中一般会包含如下内容:</p>
+<ul>
+<li>
+<p>源代码文件。</p>
+</li>
+<li>
+<p>配置和检测程序（如 configure 或 config 等)。</p>
+</li>
+<li>
+<p>软件安装说明和软件说明（如 INSTALL 或 README）。</p>
+</li>
+</ul>
+<p>源码包的优点如下：</p>
+<blockquote>
+<ul>
+<li>
+<p>开源。如果你有足够的能力，则可以修改源代码。</p>
+</li>
+<li>
+<p>可以自由选择所需的功能。</p>
+</li>
+<li>
+<p>因为软件是编译安装的，所以更加适合自己的系统，更加稳定，效率也更高。</p>
+</li>
+<li>
+<p>卸载方便。</p>
+</li>
+</ul>
+</blockquote>
+<p>源码包的缺点如下：</p>
+<blockquote>
+<ul>
+<li>
+<p>安装过程步骤较多，尤其是在安装较大的软件集合时（如 LAMP 环境搭建），容易出现拼写错误。</p>
+</li>
+<li>
+<p>编译过程时间较长，安装时间比二进制包安装要长。</p>
+</li>
+<li>
+<p>因为软件是编译安装的，所以在安装过程中一旦报错，新手很难解决。</p>
+</li>
+</ul>
+</blockquote>
+<h3 id="二进制包的特点" tabindex="-1"><a class="header-anchor" href="#二进制包的特点" aria-hidden="true">#</a> 二进制包的特点</h3>
+<p>二进制包是在软件发布的时候已经进行过编译的软件包，所以安装速度比源码包快得多（和 Windows 下软件安装速度相当）。但是因为已经进行过编译，大家也就不能再看到软件的源代码了。目前两大主流的二进制包系统是 DPKG 包和 RPM 包。</p>
+<ul>
+<li>
+<p>DPKG 包是由 Debian Linux 所开发的包管理机制，通过 DPKG 包，Debian Linux 就可以进行软件包管理，主要应用在 Debian 和 Ubuntu 中。（一般是   *.deb 格式）</p>
+</li>
+<li>
+<p>RPM 包是由 Red Hat 公司所开发的包管理系统，功能强大，安装、升级、查询和卸载都非常简单和方便。目前很多 Linux 版本都在使用这种包管理方式，包括 Fedon、CentOS、SuSE 等。（一般是 *.rpm 格式）</p>
+</li>
+</ul>
+<p>二进制包的优点如下：</p>
+<blockquote>
+<ul>
+<li>
+<p>包管理系统简单，只通过几个命令就可以实现包的安装、升级、查询和卸载。</p>
+</li>
+<li>
+<p>安装速度比源码包安装快得多。</p>
+</li>
+</ul>
+</blockquote>
+<p>二进制包的缺点如下：</p>
+<blockquote>
+<ul>
+<li>
+<p>经过编译，不能再看到源代码。</p>
+</li>
+<li>
+<p>功能选择不如源码包灵活。</p>
+</li>
+<li>
+<p>依赖性。有时我们会发现，在安装软件包 a 时需要先安装 b 和 c，而在安装 b 时需要先安装 d 和 e。这就需要先安装 d 和 e，再安装 b 和 c，最后才能安装 a。比如，我买了一个漂亮的灯具，打算安装到客厅里，可是在安装灯具之前，客厅总要有顶棚吧，顶棚总要刷好了油漆吧。装修和安装软件其实类似，总要有一定的顺序，但是有时依赖性会非常强。</p>
+</li>
+</ul>
+</blockquote>
+<h2 id="包管理命令" tabindex="-1"><a class="header-anchor" href="#包管理命令" aria-hidden="true">#</a> 包管理命令</h2>
+<h3 id="二进制包命名规则" tabindex="-1"><a class="header-anchor" href="#二进制包命名规则" aria-hidden="true">#</a> 二进制包命名规则</h3>
+<p>大多数Linux应用软件包的命名也有一定的规律，他遵循： <strong>名称-版本-修正版-可用平台-类型</strong></p>
+<p>如 wps-office-11.1.0.10161-1.x86_64.rpm。他是 Redhat Linux 提供的一种包封装格式。</p>
+<blockquote>
+<ul>
+<li>软件名称：wps-office</li>
+<li>版本号：11.1.0.10161</li>
+<li>修正版本：1</li>
+<li>可用平台：x86_64，适用于 x86 平台</li>
+<li>类型：rpm，说明是个rpm包。</li>
+</ul>
+</blockquote>
+<p><em>如 wps-office_11.1.0.10161-1_amd64.deb。他是 Debain Linux 提供的一种包封装格式。</em></p>
+<blockquote>
+<ul>
+<li><em>软件名称：wps-office</em></li>
+<li><em>版本号：11.1.0.10161</em></li>
+<li><em>修正版本：1</em></li>
+<li><em>可用平台：amd64，适用于 x86 平台</em></li>
+<li><em>类型：deb，说明是个deb包。</em></li>
+</ul>
+</blockquote>
+<div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>我们把 ngin-1.16.1-2.el7.x86_64.rpm（<em>或者 nginx_1.20.0-1~bionic_amd64.deb</em>）
+叫作包全名，而把 nginx 叫作包名。为什么要做出特殊说明呢？因为有些命令后面一定跟的是包全名，如安装和升级；而有些命令后面一定跟的是包名，如查询和卸载。如果弄错，命令就会报错。</p>
+</div>
+<h3 id="包的依赖性" tabindex="-1"><a class="header-anchor" href="#包的依赖性" aria-hidden="true">#</a> 包的依赖性</h3>
+<p>很多人不喜欢 RPM 包管理系统（<em>DPKG 包管理系统</em>），是因为它的依赖性。我们看看示意图，如图12-1 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/bao_yilai.png" alt="bao_yilai" loading="lazy"></p>
+<p><strong>图12-1	<u>RPM包的依赖性</u></strong></p>
+</div>
+<p>刚刚说过，假设我们要安装软件包 a，则可能需要先安装软件包 d 和 e，再安装软件包 b 和 c 才行。有时这种依赖可能会有几十个之多，当然这也要看你的系统默认安装了哪些软件。</p>
+<p>但这还不是最可怕的，最可怕的依赖性是什么呢？我们来安装一个 RPM 包 mysql-connector-odbc。这里我们并非讲解安装命令，所以先不说安装命令，只是来看一下安装这个软件的报错。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -ivh /mnt/CentOS/mysql-connector-odbc-3.51.26r1127-1.e15.i386.rpm</span>
+<span class="token comment">#安装指定软件包</span>
+warning:/mnt/centOS/mysql-connector-odbc-3.51.26r1127-1.e15.1386.rpm: HeaderV3 DSA signature: NOKEY， key ID e8562897
+error: Failed dependencies:
+       libodbcinst.so.1 is needed by mysql-connector-odbc-3.51.26r1127-1.e15.1386
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p>这个报错很明显是依赖性错误（error: Failed dependencies:），也就是说，在安装 mysql-connector-odbe 前需要先安装 libodbcinst.so.1 这个软件包。那还不简单，在光盘中找到这个软件包安装上不就行了吗？可是问题来了,我们找遍了两张光盘，发现居然没有叫 libodbcinst.so.1 的软件包，这是怎么回事？原因很简单，我们一直在说 RPM 软件包，既然是软件包，那么包中就不止有一个文件，而我们刚刚依赖的 libodbcinst.so.1 这个库文件只是包中的一个文件而己。如果想要安装 libodbcinst.so.1 这个库文件，就必须安装它所在的软件包。怎么知道这个库文件属于哪个软件包呢？因为库文件名不和它所属的软件包名类似，所以很难确定这个库文件属于哪个软件包。RPM 包管理系统也发现了这个问题，它给我们提供的解决办法是一个网站&lt;www.rpmfind.net&gt;</p>
+<p>在搜索框中输入要查找的库文件名，如 libodbcinst.so.1，单击“Search”按钮，网站会帮你查询出此库文件所在的软件包。如果在 CentOS 系统中，那么搜索结果是这个库文件团于 unixODBC-libs-2.2.11-10.el5.i386.rpm 软件包。所以，只要安装了 unixODBC-libs-22.11-10.el5.i386.rpm 软件包，那么库文件 libodbcinst.so.1 就会自动安装。</p>
+<hr>
+<p><em>同样，DPKG 包也是有依赖的问题，解决方法是在安装的时候提示缺少依赖提示后，紧接着输入如下命令，即可解决依赖包问题。</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token function">sudo</span> <span class="token function">apt-get</span> -f -y <span class="token function">install</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><hr>
+<div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>并不是安装 mysql-connector-odbe 包一定会报缺少 libodbcinst.so.1 库文件的错误，这和你的系统安装方式有关。如果你的系统默认已经安装好了 unixODBC-libs，就不会报剛刚的错误。那什么是库文件呢？库文件是系统写好的实现一定功能的计算机程序，其他软件如果需要这个功能，就不用再自己写了，直接拿过来使用就可以了，大大加快了软件开发速度。比如，我喜欢玩高达模型，这个模型是已经做好的一个一个的零件，自己组装的时候，只要把这些零件组装在一起就可以了，而不用自己去制作这些零件，大大简化了模型组装的难度。</p>
+</div>
+<h3 id="包的安装与升级" tabindex="-1"><a class="header-anchor" href="#包的安装与升级" aria-hidden="true">#</a> 包的安装与升级</h3>
+<p>说了这么多，终于可以开始安装了，我们先安装 apache 程序。之所以选择安装 apache 程序，是因为我们后续安装源码包时也计划安装 apachc 程序，这样就能初步认识到源码包和 RPM 的区别。不过需要注意的是，同一个程序的 RPM 包和源码包可以安装到一台服务器上，但是只能启动一个，因为它们需要占用同样的 80 端口。不过，如果真在生产服务器上，那么一定不会同时安装两个 apache 程序，容易把管理员搞糊涂，而且会占用更多的服务器磁盘空间。</p>
+<ol>
+<li><strong>RPM 包默认安装路径</strong></li>
+</ol>
+<p>源码包和 RPM 包安装的程序为什么可以在一台服务器上呢？主要是因为安装路径不同，所以不会覆盖安装。RPM 包一般采用系统默认路径安装，而源码包一般通过手工指定安装路径（一般安装到 <code>/usr/local/</code> 中）安装。</p>
+<p>RPM 包（ <em>DPKG 包同样</em>）默认安装路径是可以通过命令查询的，一般安装在如表12-1 所示的目录中。</p>
+<p><strong>表12-1	<u>RPM包默认安装路径</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>安装路径</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/etc/</td>
+<td>配置文件安装目录</td>
+</tr>
+<tr>
+<td>/usr/bin/</td>
+<td>可执行命令安装目录</td>
+</tr>
+<tr>
+<td>/usr/lib/</td>
+<td>程序所使用的函数库保存位置</td>
+</tr>
+<tr>
+<td>/usr/share/doc/</td>
+<td>基本的软件使用手册保存位置</td>
+</tr>
+<tr>
+<td>/usr/share/man/</td>
+<td>帮助文件保存位置</td>
+</tr>
+</tbody>
+</table>
+<p>RPM 包（<em>DPKG 包</em>）难道就不能手工指定安装路径吗？当然是可以的，但是一旦手工指定安装路径，所有的安装文件就会安装到手工指定位置，而不会安装到系统默认位置。而系统的默认搜索位置并不会改变，依然会去默认位置之下搜索，当然系统就不能直接找到所需的文件，也就失去了作为系统默认安装路径的一些好处。所以我们一般不会指定 RPM 包的安装路径，而使用默认安装路径。</p>
+<ol start="2">
+<li><strong>RPM 包的安装</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -ivh 包全名</span>
+选项：
+	-i	：安装（install）
+	-v	：显示更详细的信息（verbose）
+	-h	：打印 <span class="token comment">#，显示安装进度（hash）</span>
+<span class="token comment">#注意一定是包全名。如果是跟包全名的命令，则要注意路径，因为软件包在光盘当中</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><p>例如，安装 apache 软件包，注意出现两个 100% 才是正确安装，第一个 100%仅是在准备，第二个 100%才是正确安装。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code>例子1：
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -ivh /mnt/cdrom/Packages/httpd-2.2.15-15.e16.centos.1.i686.rpm</span>
+Preparing<span class="token punctuation">..</span>.		<span class="token comment">################################################################# [100%]</span>
+    <span class="token number">1</span>:httpd			<span class="token comment">################################################################# [100%]</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>如果打算同时安装多个软件包呢？可以用一条命令同时安装，将多个软件包用空格分开就可以了。</p>
+<hr>
+<p><em>DPKG 包的安装</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@ubuntu ~<span class="token punctuation">]</span><span class="token comment"># dpkg -i 包全名</span>
+选项：
+	-i	：安装（install）
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><ol start="3">
+<li><strong>RPM 包的升级</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -Uvh 包全名</span>
+选项：
+	-U	：升级安装。如果没有安装过，则系统直接安装。如果安装过的版本较低，则升级到新版本（upgrade）
+	-F	：升级安装。如果没有安装过，则不会安装。必须安装有较低版本才能升级（freshen）
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><hr>
+<p><em>DPKG 包的升级</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@ubuntu ~<span class="token punctuation">]</span><span class="token comment"># dpkg -i 包全名</span>
+<span class="token comment">#和安装命令一样</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><hr>
+<h3 id="包的查询" tabindex="-1"><a class="header-anchor" href="#包的查询" aria-hidden="true">#</a> 包的查询</h3>
+<p>RPM 包管理工具是非常强大和方便的包管理工具，它比源码包的方便之处就在于可以使用命令查询、升级和卸载。在查询的时候，其实是在查询 <code>/var/lib/rpm/</code> 这个目录下的数据库文件，那为什么不直接查看这些文件呢？你可以尝试使用 Vim 查看这些文件，会发现都是乱码，也就是说，这些文件其实都是二进制文件，不能直接用编辑器查看，所以才需要使用命令查看。</p>
+<p>RPM 查询命令采用如下格式：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm [选项] 查询对象</span>
+选项：
+	-q	：查询（query）
+	-a 	：查询所有已安装的包（all）
+	-i 	：查询软件信息（information）
+	-p	：查询没有安装的软件包（package）
+	-l	：列出软件包中所有的文件列表和软件所安装的目录（list）
+	-f	：查询系统文件属于哪个软件包（file）
+	-R	：查询软件包的依赖性（requires）
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br></div></div><p><strong>表12-2	<u>常用 rpm 命令</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rpm -q 包名</code></td>
+<td>查询软件包是否安装</td>
+</tr>
+<tr>
+<td><code>rpm -qa</code> <br />`rpm -ga</td>
+<td>grep 包名`</td>
+</tr>
+<tr>
+<td><code>rpm -qi 包名</code><br /><code>rpm -qip 包全名</code></td>
+<td>查询软件包的详细信息<br />查询还没有安装的软件包的详细信息</td>
+</tr>
+<tr>
+<td><code>rpm -ql 包名</code><br /><code>rpm -qlp 包全名</code></td>
+<td>查询软件包中的文件列表<br />查询还没有安装的软件包中的文件列表</td>
+</tr>
+<tr>
+<td><code>rpm -qf 文件名</code></td>
+<td>查询文件属于哪个 RPM 包</td>
+</tr>
+<tr>
+<td><code>rpm -qR 包名</code><br /><code>rpm -qRp 包名</code></td>
+<td>查询软件包所依赖的软件包<br />查询没有安装的软件包所依赖的软件包</td>
+</tr>
+</tbody>
+</table>
+<p><em>DPKG 包的查询</em></p>
+<p><em>dpkg 包管理工具同样是非常强大和方便的包管理工具，可以实现软件包的安装、卸载、查询、编译、打包等功能。</em></p>
+<p><em>dpkg（Debian Package）管理工具 ，Ubuntu 相关的软件包文件使用 .deb 后缀，就是因为 Ubuntu 与 Debian GNU/Linux 发行版有着紧密的关系。</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@ubuntu ~<span class="token punctuation">]</span><span class="token comment"># dpkg [选项] 查询对象</span>
+选项：
+	-l	：简明地列出软件包的状态（list），后面跟着包名则显示该包名的软件包状态
+	-s	：显示指定软件包的详细状态（status）
+	-L	：列出属于指定软件包的文件（listfiles）
+	-c	：列出没有安装的软件包中的文件列表（contents）
+	-I	：（大写 i）查询还没有安装的软件包的详细信息（info）
+	-S	：（大写 s）搜索含有指定文件的软件包（search）
+	-x	：解压 deb 格式的包
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br></div></div><p><strong>表12-3	<u>常用 dpkg 命令</u></strong></p>
+<table>
+<thead>
+<tr>
+<th><em>命令</em></th>
+<th><em>说明</em></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em><code>dpkg -l 包名</code></em></td>
+<td><em>查询软件包是否安装</em></td>
+</tr>
+<tr>
+<td><em><code>dpkg -l</code></em><br /><em><code>dpkg -l 包名</code></em></td>
+<td><em>查询系统中的所有安装软件包</em><br /><em>查询系统中的已安装，指定包名的软件包</em></td>
+</tr>
+<tr>
+<td><em><code>dpkg -s 包名</code></em><br /><em><code>dpkg -I 包全名</code></em></td>
+<td><em>查询软件包的详细信息</em><br /><em>查询还没有安装的软件包的详细信息</em></td>
+</tr>
+<tr>
+<td><em><code>dpkg -L 包名</code></em><br /><em><code>dpkg -c 包全名</code></em></td>
+<td><em>查询软件包中的文件列表</em><br /><em>查询还没有安装的软件包中的文件列表</em></td>
+</tr>
+<tr>
+<td><em><code>dpkg -S 文件名</code></em></td>
+<td>查询文件属于哪个 DPKG 包</td>
+</tr>
+<tr>
+<td>*`dpkg -s 包名</td>
+<td>grep Depends<code>*&lt;br /&gt;*</code>dpkg -I 包全名</td>
+</tr>
+</tbody>
+</table>
+<h3 id="包的卸载" tabindex="-1"><a class="header-anchor" href="#包的卸载" aria-hidden="true">#</a> 包的卸载</h3>
+<p>卸载也是有依赖性的。比如，在安装的时候，要先安装 httpd 软件包，再安装 htpd 的功能模块 mod_ ssl 包。那么，在卸载的时候，一定要先卸载 mod_ssl 软件包，再卸载 htpd 软件包，否则就会报错。软件包卸载和拆除大楼是一样的，你要拆除 2 楼和3 楼，一定要先拆除 3 楼；如果非要先拆除 2 楼，那么 3 楼该存在于什么地方呢？</p>
+<p>删除格式非常简单，如下:</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -e 包名</span>
+选项：
+	-e	：卸载（erase）
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><p>如果不按依赖性卸载，就会报依赖性错误。当然，卸载命令是支持“-nodeps”选项的，可以不检测依赖性直接卸载。但是，如果这样做，则很可能导致其他软件包无法正常使用，所以并不推荐这样卸载。</p>
+<p><em>dpkg 包卸载</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@ubuntu ~<span class="token punctuation">]</span><span class="token comment"># dpkg [选项] 包名</span>
+选项：
+	-r	：卸载软件包，但是不删除软件包的配置文件。
+	-P	：完全删除软件包，包括相关配置文件。
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><h3 id="包的校验与数字证书" tabindex="-1"><a class="header-anchor" href="#包的校验与数字证书" aria-hidden="true">#</a> 包的校验与数字证书</h3>
+<ol>
+<li><strong>包的校验</strong></li>
+</ol>
+<p>系统中安装的 RPM 包数量众多，而每个 RPM 包中都包含大量的文件，万一某个文件被删除了，或者误修改了某个文件中的数据，或者有人恶意修改了某个文件，我们是否有监控和检测手段发现这些问题呢？这时候，必须使用  RPM 包校验来确认文件是否被动过手脚，校验其实就是把已经安装的文件和 <code>/var/lib/rpm/</code> 目录下的数据库内容进行比较，以确定是否有文件被修改。校验的格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -Va</span>
+选项：
+	-Va	：校脸本机已经安装的所有软件包
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -V 已安装的包名</span>
+选项：
+	-V	：校验指定 RPM 包中的文件（verify）
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -Vf 系统文件名</span>
+选项：
+	-Vf	：校验某个系统文件是否被修改
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><ol start="2">
+<li><strong>数字证书</strong></li>
+</ol>
+<p>刚刚的校验方法只能对已经安装的 RPM 包中的文件进行校验，但如果 RPM 包本身就被动过手脚，那么 RPM 包校验就不能解决问题了，必须使用数字证书验证。数字证书也叫数字签名，它由软件开发商直接发布。只要安装了这个数字证书，如果 RPM包被进行了修改，那么数字证书验证就不能匹配，软件也就不能安装。数字签名，可以想象成人的签名，每个人的签名都是不能模仿的（广商的数字证书是唯一的）。只有我认可的文件现才会签名（只要是厂商发布的软件，都要符合数字证书验证)；如果我的文件被人修改了，那么我的签名就会变得不同（如果软件改变，数字证书就会改变，从而通不过验证。当然，现实中人的手工签名不会直接改变，所以数字证书比手工签名还要可靠）。</p>
+<p>数字证书有如下特点：</p>
+<ul>
+<li>首先必须找到原厂的公钥文件，然后才能进行安装。•再安装 RPM 包，会去提取 RPM 包中的证书信息，然后和本机安装的原厂证书进行验证。</li>
+<li>如果验证通过，则允许安装；如果验证不通过，则不允许安装并发出警告。</li>
+</ul>
+<h3 id="包中的文件提取" tabindex="-1"><a class="header-anchor" href="#包中的文件提取" aria-hidden="true">#</a> 包中的文件提取</h3>
+<p>在讲 RPM 包文件提取之前，先介绍一下 <code>cpio</code> 命令。<code>cpio</code> 命令可以把文件或目录从文件库中提取出来，也可以把文件或目录复制到文件库中。可以把 <code>cpio</code> 命令看成<u>备份或还原命令</u>，它既可以把数据备份成 cpio 文件库，也可以把 cpio 文件库中的数据还原出来。不过，<code>epio</code> 命令最大的问题是不能自己指定备份或还原的文件是什么，而必须由其他命令告诉 <code>epio</code> 命令要备份和还原哪个文件，这必须依赖数据流重定向的命令。</p>
+<p><code>cpio</code> 命令主要有三种基本模式：</p>
+<ul>
+<li>
+<p>“-o”模式指的是 copy-out 模式，就是把数据备份到文件库中；</p>
+</li>
+<li>
+<p>“-i”模式指的是 copy-in 模式，就是把数据从文件库中恢复；</p>
+</li>
+<li>
+<p>“-p”模式指的是 copy 模式，就是不把数据备份到 cpio 库中，而是直接复制为其他文件。</p>
+</li>
+</ul>
+<p>命令格式如下:</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code>cpio -o<span class="token punctuation">[</span>vcB<span class="token punctuation">]</span> <span class="token operator">></span> <span class="token punctuation">[</span>文件<span class="token operator">|</span>设备<span class="token punctuation">]</span>
+<span class="token comment">#备份</span>
+选项：
+	-o	：copy-out 模式，各份
+	-v	：显示备份过程
+	-c	：使用较新的 portable <span class="token function">format</span> 存储方式
+	-B	：设定输入/输出块为 5120Bytes，而不是模式的512Bytes
+
+cpio -i<span class="token punctuation">[</span>vcdu<span class="token punctuation">]</span> <span class="token operator">&lt;</span> <span class="token punctuation">[</span>文件<span class="token operator">|</span>设备<span class="token punctuation">]</span>
+<span class="token comment">#还原</span>
+选项：
+	-i	：copy-in 模式，还原
+	-v	：显示还原过程
+	-c	：使用较新的 portable <span class="token function">format</span> 存储方式
+	-d	：还原时自动新建目录
+	-u	：自动使用较新的文件覆盖较旧的文件
+	
+<span class="token comment">#复制</span>
+<span class="token punctuation">[</span>文件<span class="token operator">|</span>设备<span class="token punctuation">]</span> <span class="token operator">|</span> cpio -p 目标目录
+<span class="token comment">#[文件|设备]常用 find 或 ls 命令</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br></div></div><p>先来看一下使用 cpio 备份、还原、复制数据的方法，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localnost ~<span class="token punctuation">]</span><span class="token comment"># find /etc -print | cpio -ocvB > /root/etc.cpio</span>
+<span class="token comment">#利用find 命令指定要备份/etc/目录，使用 > 导出到 etc.cpio 文件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ll -h etc.cpio</span>
+-rw-r--r--. <span class="token number">1</span> root root 21M <span class="token number">6</span>月 <span class="token number">5</span> <span class="token number">12</span>:29 ete.cpio
+<span class="token comment">#etc.cpio 文件生成</span>
+-------------------------------------------------------------------------------------
+<span class="token punctuation">[</span>root@localnost ~<span class="token punctuation">]</span><span class="token comment"># cpio -idveu &lt; /root/etc.cpio</span>
+<span class="token comment">#还原 etc 的备份</span>
+<span class="token comment">#如果大家查看一下当前目录 /root/，就会发现没有生成 /etc/ 目录。这是因为备份时 /etc/ 目录使用的是绝对路径，所以数据直接恢复到/etc/系统目录中，而没有生成在 /root/etc/目录中</span>
+--------------------------------------------------------------------------------------
+<span class="token punctuation">[</span>root@localnost ~<span class="token punctuation">]</span><span class="token comment"># cd /tmp/</span>
+<span class="token comment">#进入 /tmp/ 目录</span>
+<span class="token punctuation">[</span>root@localhost tmp<span class="token punctuation">]</span><span class="token comment"># rm -rf *</span>
+<span class="token comment">#删除 /tmp/ 目录中的所有数据</span>
+<span class="token punctuation">[</span>root@localhost tmp<span class="token punctuation">]</span><span class="token comment"># mkdir test</span>
+<span class="token comment">#建立备份目录</span>
+<span class="token punctuation">[</span>root@localhost tmp<span class="token punctuation">]</span><span class="token comment"># find /boot/-print i cpio -p /tmp/test</span>
+<span class="token comment">#备份 /boot/ 目录到 /tmp/test/ 目录中</span>
+<span class="token punctuation">[</span>root@localhost tmp<span class="token punctuation">]</span><span class="token comment"># ls test/</span>
+boot 
+<span class="token comment">#在/tmp/test/目录中备份出了/boot/目录</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br></div></div><p>接下来介绍如何在 RPM 包中提取某个特定的文件。假设在服务器使用过程中，我们发现某个系统文件被人动了手脚，或者不小心删除了某个系统重要文件，那么我们可以在 RPM 包中把这个系统文件提取出来修复有问题的源文件吗？当然可以。RPM 包中的文件虽然众多，但也是可以逐个提取的。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm2cpio 包全名 | cpio -idv .文件绝对路径</span>
+	rpm2cpio		<span class="token operator">&lt;</span>---将 RPM 包转换为 cpio 格式的命令
+    cpio			<span class="token operator">&lt;</span>---这是一个标准工具，用于创建软件档案文件和从档案文件中提取文件
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><p>举个例子，假设把系统中的 <code>/bin/ls</code> 命令误删除了，可以修复吗？这时有两种方法修复：一种方法是使用--force 选项覆盖安装一遍 coreutilis-8.4-19.el6.i686 包：另一种方法是先使用 <code>cpio</code> 命令提取出 <code>/bin/ls</code> 命令文件，再把它复制到对应位置。不过，怎么知道/bin/ls 命令属于Coreutils-8.4-19.cl6.i686 软件包呢？还记得 -qf 选项吗？命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">rpm</span> -qf /bin/ls
+coreutils-8.4-19.e16.1686
+<span class="token comment">#查看 ls 文件属于哪个软件包</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><p>我们先使用 cpio 命令提取出 ls 命令文件，然后复制到对应位置，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">mv</span> /bin/ls /root/
+<span class="token comment">#把 /bin/ls 今令移动到 /root/ 目录下，造成误删除的假象</span>
+<span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># ls</span>
+-bash: 1s:command not found 
+<span class="token comment">#这时执行 1s 命令，系统会报“命令没有找到”错误</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm2cpio /mnt/cdrom/Packages/coreutils-8.4-19.e16.i686.rpm | cpio -idv ./bin/ls</span>
+./bin/ls
+<span class="token number">24772</span> 块
+<span class="token comment">#提取 ls 命令文件到当前目来下</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">cp</span> /root/bin/ls /bin/
+<span class="token comment">#把提取出来的 1s 命令文件复制到 /bin/ 目录下</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ls</span>
+anaconda-ks.cfg		bin		inittab		install.log		install.log.syslog		<span class="token function">ls</span>
+<span class="token comment">#恭事，ls 命令又可以正常使用了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br></div></div><p><em>DPKG 包中的文件提取</em></p>
+<p><em>还是用上面的 ls 命令丢失的例子：</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> dpkg -S /bin/ls
+coreutils: /bin/ls
+<span class="token comment">#查看 ls 文件属于哪个软件包</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">mv</span> /bin/ls /root/
+<span class="token comment">#把 /bin/ls 今令移动到 /root/ 目录下，造成误删除的假象</span>
+<span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># ls</span>
+-bash: 1s:command not found 
+<span class="token comment">#这时执行 1s 命令，系统会报“命令没有找到”错误</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir debdir &amp;&amp; dpkg -x coreutils_8.28-1ubuntu1_amd64.deb ./debdir</span>
+<span class="token comment">#在当前目录下新建目录 debdir，再解压 deb 包文件到 debdir 目录下</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cp ./debdir/bin/ls /bin/ &amp;&amp; rm -rf debdir/</span>
+<span class="token comment">#把提取出来的 ls 命令文件复制到 /bin/ 目录下，并删除 debdir 目录</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ls</span>
+anaconda-ks.cfg		bin		inittab		install.log		install.log.syslog		<span class="token function">ls</span>
+<span class="token comment">#恭事，ls 命令又可以正常使用了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><h2 id="依赖管理" tabindex="-1"><a class="header-anchor" href="#依赖管理" aria-hidden="true">#</a> 依赖管理</h2>
+<h3 id="yum-在线管理" tabindex="-1"><a class="header-anchor" href="#yum-在线管理" aria-hidden="true">#</a> yum 在线管理</h3>
+<p>RPM 包的安装虽然很方便和快捷，但是依赖性实在是很麻烦。尤其是库文件依赖，还要去 rpmfind 网站查找库文件到底属于哪个 RPM 包，从而导致 RPM 包的安装非常烦琐。那有没有可以自动解决依赖性、自动安装的方法呢？当然有，yum 在线管理就可以自动处理 RPM 包的依赖性问题，从而大大简化 RPM 包的安装过程。但是大家需要注意：首先，yum 安装所安装的还是 RPM 包；其次，yum 安装是需要有可用的 yum 服务器存在的，当然这个 yum 服务器可以在网上，也可以使用光盘在本地搭建。</p>
+<p>yum 可以方便地进行 RPM 包的安装、升级、查询和卸载，而且可以自动解决依赖性问题，非常方便和快捷。但是，一定要注意 yum 的卸载功能。**yum 在卸载软件的同时会卸载这个软件的依赖包，但是如果卸载的依赖包是系统的必备软件包，就有可能导致系统崩溃。**除非你确实知道 yum 在自动卸载时会卸载哪些软件包，否则<u>最好还是不要执行 yum 卸载。</u></p>
+<h3 id="yum-源搭建" tabindex="-1"><a class="header-anchor" href="#yum-源搭建" aria-hidden="true">#</a> yum 源搭建</h3>
+<p>yum 源既可以使用网络 yum 源，也可以使用本地光盘作为 yum 源。要使用网络 yum 源，那么你的主机必须是正常联网的。</p>
+<p>当然，要使用 yum 进行 RPM 包安装，那么必须安装 yum 软件。查看命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -qa | grep yum</span>
+yum-metadata-parser-1.1.2-16.e16.1686
+yum-3.2.29-30.e16.centos.noarch
+yum-uti1s-1.1.30-14 e16.noarch
+yum-plugin-fastestmirror-1.1.30-14.e16.noarch
+yum-plugin-security-1.1.30-14.e16.noarch
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><p>如果没有安装，则需要手工使用 RPM 包方式安装.</p>
+<ol>
+<li><strong>网络 yum 源服务器搭建</strong></li>
+</ol>
+<p>在主机网络正常的情况下，CentOS 的 yum 是可以直接使用的，不过我们需要了解一下 yum 源配置文件的内容。yum 源配置文件保存在 <code>/ete/yum.repos.d/</code> 目录中，文件的扩展名一定是“*.repo&quot;。也就是说，yum 源配置文件只要扩展名是“*.repo”就会生效。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">ls</span> /etc/yum.repos.d/
+Centos-Base.repo	CentOs-Media.repo	Centos-Debuginfo.repo.bak	CentOS-Vault repo
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><p>这个目录中有 4 个 yum 源配置文件，默认情况下 <code>CentOS-Base.repo</code> 文件生效。我们打开这个文件看看，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@Localhost ~<span class="token punctuation">]</span><span class="token comment"># vim /ete/yum.repom.d/Centos-Base.ropo</span>
+
+<span class="token punctuation">[</span>base<span class="token punctuation">]</span>
+<span class="token assign-left variable">name</span><span class="token operator">=</span>CentOS-<span class="token variable">$releasever</span> - Base
+<span class="token assign-left variable">mirrorlist</span><span class="token operator">=</span>http://mirrorlist.centoa.org/?release-<span class="token variable">$releasever</span><span class="token operator">&amp;</span>arch-<span class="token variable">$basearch</span><span class="token operator">&amp;</span><span class="token assign-left variable">ropo</span><span class="token operator">=</span>os
+<span class="token assign-left variable">baseurl</span><span class="token operator">=</span>http://mirror.centos.org/centos/<span class="token variable">$releasever</span>/os/<span class="token variable">$basearch</span>/gpgcheck<span class="token operator">=</span><span class="token number">1</span>
+<span class="token assign-left variable">gpgkey</span><span class="token operator">=</span>file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Centos-6
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>在 <code>CentOS-Base.repo</code> 文件中有 5 个 yum 源容器，这里只列出了 base 容器，其他容器和 base 容器类似。我们解释一下 base 这个容器。</p>
+<ul>
+<li>
+<p>[basc]：容器名称，一定要放在[  ]中。</p>
+</li>
+<li>
+<p>name：容器说明，可以自己随便写。</p>
+</li>
+<li>
+<p>mirrorlist：镜像站点，这个可以注释掉。</p>
+</li>
+<li>
+<p>baseurl：我们的 yum 源服务器的地址。默认是 CeniOS 官方的 yum 源服务器，是可以使用的。如果你觉得慢，则可以改成你喜欢的 yum 源地址。</p>
+</li>
+<li>
+<p>enabled：此容器是否生效，如果不写或写成 enabled=1 则表示此容器生效，写成 enabled=0 则表示此容器不生效。</p>
+</li>
+<li>
+<p>gpgcheck：如果为 1 则表示 RPM 的数字证书生效；如果为 0 则表示 RPM 的数字证书不生效。</p>
+</li>
+<li>
+<p>gpgkey：数字证书的公钥文件保存位置。不用修改。</p>
+</li>
+</ul>
+<p>yum 源配置文件默认不需要进行任何修改就可以使用，只要网络可用就行。</p>
+<ol start="2">
+<li><strong>以本地光盘作为 yum 源服务器</strong></li>
+</ol>
+<p>如果 Linux 主机不能联网，yum 就不能使用吗？yum 已经考虑到这个问题，所以在 <code>/etc/yum.repos.d/</code> 目录下还有一个 <code>CentOS-Media.repo</code> 文件，这个文件就是以本地光盘作为 yum 源服务器的模板文件，只需要进行简单的修改即可。</p>
+<p>第一步：放入 CentOS 安装光盘，并挂载光盘到指定位置。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /mnt/cdrom</span>
+<span class="token comment">#创建 cdrom 目录，作为光盘的挂载点</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/cdrom /mnt/cdrom/</span>
+mount: block device /dev/sr0 is write-protected, mounting read-only
+<span class="token comment">#挂载光盘到/mnt/cdrom 目录下</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p>第二步：修改其他几个 yum 源配置文件的扩展名，让它们失效，因为只有扩展名是“*.repo”的文件才能作为 yum  源配置文件。当然也可以删除其他几个 yum 源配置文件，但是如果删了，当你又想用网络作为 yum 源时，就没有了参考文件，所以最好还是修改扩展名。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /etc/yum.repos.d/</span>
+<span class="token punctuation">[</span>rootelocalhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># mv Centos-Base.repo CentOS-Base.repo.bak</span>
+<span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># mv Centos-Debuginfo.repo Centos-Debuginfo.repo.bak</span>
+<span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># mv Centos-Vault.repo Centos-Vault.repo.bak</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>第三步：修改光盘 yum 源配置文件 CentOS-Media.repo，参照以下方法修改：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># vim CentOS-Media.repo</span>
+<span class="token punctuation">[</span>c6-media<span class="token punctuation">]</span>
+<span class="token assign-left variable">name</span><span class="token operator">=</span>CentOS-<span class="token variable">$releasever</span> - Media
+<span class="token assign-left variable">baseurl</span><span class="token operator">=</span>file:///mnt/cdrom
+<span class="token comment">#地址为你自己的光盘挂载地址</span>
+<span class="token comment">#			file:///media/cdrom/</span>
+<span class="token comment">#			file:///media/cdrecorder/</span>
+<span class="token comment">#注释这两个不存在的地址</span>
+<span class="token assign-left variable">gpgcheck</span><span class="token operator">=</span><span class="token number">1</span>
+<span class="token assign-left variable">enabled</span><span class="token operator">=</span><span class="token number">1</span>
+<span class="token comment">#把 enabled=0 改为 enabled=1，让这个yum 源配置文件生效</span>
+<span class="token assign-left variable">gpgkey</span><span class="token operator">=</span>file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentoS-6
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br></div></div><p>配置完成，现在可以感受一下 yum 的便捷了。</p>
+<h3 id="yum-常用命令" tabindex="-1"><a class="header-anchor" href="#yum-常用命令" aria-hidden="true">#</a> yum 常用命令</h3>
+<ol>
+<li><strong>查询</strong></li>
+</ol>
+<ul>
+<li>查询 yum 源服务器上所有可安装的软件包列表。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum list</span>
+<span class="token comment">#查询所有可用的软件包列表</span>
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.njupt.edu.cn
+ * updates: mirrors.nju.edu.cn
+Installed Packages
+<span class="token comment">#已经安装的软件包</span>
+NetworkManager.x86_64                       <span class="token number">1</span>:1.18.8-1.el7             @anaconda
+NetworkManager-libnm.x86_64                 <span class="token number">1</span>:1.18.8-1.el7             @anaconda
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+Available Packages
+<span class="token comment">#还可以安装的软件包</span>
+<span class="token number">389</span>-ds-base.x86_64                          <span class="token number">1.3</span>.10.2-10.el7_9          base
+<span class="token number">389</span>-ds-base-devel.x86_64                    <span class="token number">1.3</span>.10.2-10.el7_9          updates
+<span class="token comment">#软件名										版本						所在源</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br></div></div><ul>
+<li>查询 yum 源服务器中是否包含某个软件包。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum list 包名</span>
+<span class="token comment">#查询单个软件包</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum list samba</span>
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.njupt.edu.cn
+ * updates: mirrors.nju.edu.cn
+Available Packages
+samba.x86_64                                <span class="token number">4.10</span>.16-13.el7_9            updates
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div><ul>
+<li>搜索 yum 源服务器上所有和关键字相关的软件包</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum search 关键字</span>
+<span class="token comment">#搜索服务器上所有和关键字相关的软件包</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum search samba</span>
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.njupt.edu.cn
+ * updates: mirrors.nju.edu.cn
+<span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">=</span> N/S matched: samba <span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span><span class="token operator">==</span>
+kdenetwork-fileshare-samba.x86_64 <span class="token builtin class-name">:</span> Share files via samba
+samba-client.x86_64 <span class="token builtin class-name">:</span> Samba client programs
+samba-client-libs.i686 <span class="token builtin class-name">:</span> Samba client libraries
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+
+  Name and summary matches only, use <span class="token string">"search all"</span> <span class="token keyword">for</span> everything.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><ul>
+<li>查询指定软件包的信息</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum info 关键字</span>
+<span class="token comment">#查询软件包的信息</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum info samba</span>
+Loaded plugins: fastestmirror
+Loading mirror speeds from cached hostfile
+ * base: mirrors.nju.edu.cn
+ * extras: mirrors.njupt.edu.cn
+ * updates: mirrors.nju.edu.cn
+Available Packages
+Name        <span class="token builtin class-name">:</span> samba
+Arch        <span class="token builtin class-name">:</span> x86_64
+Version     <span class="token builtin class-name">:</span> <span class="token number">4.10</span>.16
+Release     <span class="token builtin class-name">:</span> <span class="token number">13</span>.el7_9
+Size        <span class="token builtin class-name">:</span> <span class="token number">719</span> k
+Repo        <span class="token builtin class-name">:</span> updates/7/x86_64
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br></div></div><ol start="2">
+<li><strong>安装</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum -y install 包名</span>
+选项：
+	<span class="token function">install</span>		：安装
+	-y			：自动回答 yes。如果不加 -y，那么每个安装的软件都需要手工回答 <span class="token function">yes</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum -y install gcc</span>
+<span class="token comment">#使用 yum 自动安装 gcc</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>在讲 RPM 包安装时提到，gec 是 C 语言的编译器，如果没有安装，那么源码包就无法安装。但 gcc 依赖的软件包比较多，手工使用 RPM 包安装太麻烦了，所以使用 yum安装。</p>
+<p>yum 安装可以自动解决依赖性，而且安装速度也比源码包快得多。不过，yum 到底安装的还是 RPM 包，所以 rpm 命令还是必须学习和使用的。</p>
+<ol start="3">
+<li><strong>升级</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ～<span class="token punctuation">]</span><span class="token comment"># yum -y update 包名</span>
+选项：
+    update		：升级
+	-y			：自动回答 <span class="token function">yes</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum -y install zip</span>
+<span class="token comment">#使用 yum 自动升级 zip</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>在进行升级操作时，yum 源服务器中软件包的版本要比本机安装的软件包的版本高。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum -y update</span>
+<span class="token comment">#升级本机所有软件包</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><p>这条命令会升级系统中所有的软件包。不过我们的生产服务器是稳定优先的，所以这种全系统升级的情况并不多见。</p>
+</div>
+<ol start="4">
+<li><strong>卸载</strong></li>
+</ol>
+<p>再次强调一下，除非你确定卸载的软件的依赖包不会对系统产生影响，否则不要执行 yum 的卸载，因为很有可能在卸载软件包的同时卸载的依赖包也是重要的系统文件，这就有可能导致系统崩溃。卸载命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">)</span><span class="token comment"># yum remove 包名</span>
+选项：
+	remove		：卸载
+<span class="token comment">#卸载指定的软件包</span>
+
+<span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">)</span><span class="token comment"># yum remove samba</span>
+<span class="token comment">#卸载 samba 软件包</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><h3 id="yum-软件组管理" tabindex="-1"><a class="header-anchor" href="#yum-软件组管理" aria-hidden="true">#</a> yum 软件组管理</h3>
+<p>在安装 Linux 的过程中，在选择软件包的时候，如果选择了“现在自定义”，就会看到 Linux 支持的许多软件组，比如编辑器、系统工具、开发工具等。那么，在系统安装完成后，是否可以利用 yum 安装这些软件组呢？当然可以，只需要利用 yum 的软件组管理命令。</p>
+<ul>
+<li>查询可以安装的软件组。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum grouplist </span>
+<span class="token comment">#查询可以安装的软件组</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><ul>
+<li>查询软件组中包含的软件。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum groupinfo 软件组名</span>
+<span class="token comment">#查询软件组中包合的软件</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum groupinfo "Web Server"</span>
+<span class="token comment">#查询软件组“Web Server”中包合的软件</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><ul>
+<li>安装软件组。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum groupinstall 软件组名</span>
+<span class="token comment">#安装指定软件组，组名可以由 grouplist 查询出来</span>
+
+例如：
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum groupinstall "web Server"</span>
+<span class="token comment">#安装网页服务软件组</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><ul>
+<li>卸载软件组。</li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># yum groupremove 软件组名</span>
+<span class="token comment">#卸载指定软件组</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><p>软件组管理对于安装功能集中的软件集合非常方便。比如，在安装 Linux 的时候没有安装图形界面，但是后来发现需要图形界面的支持，这时可以手工安装图形界面软件组（XWindow System 和 Desktop），就可以很方便地安装图形界面了。</p>
+<h3 id="apt-在线管理" tabindex="-1"><a class="header-anchor" href="#apt-在线管理" aria-hidden="true">#</a> <em>apt 在线管理</em></h3>
+<p><em>DPKG 包的安装虽然很方便和快捷，同样依赖性实在是很麻烦。APT 是 Advanced Packaging Tool 的简称，是一款安装包管理工具。在 Debain/Ubuntu 下，我们可以使用 <code>apt</code> 命令用于软件包的安装、删除、清理等。类似于 Windows 中的软件管理工具。</em></p>
+<h3 id="apt-源配置" tabindex="-1"><a class="header-anchor" href="#apt-源配置" aria-hidden="true">#</a> <em>apt 源配置</em></h3>
+<p><em>Debain/Ubuntu 的软件源配置文件是 <code>/etc/apt/sources.list</code>。我们看看源文件里的内容。  或者 <code>sudo apt edit-sources</code>  编辑软件源信息文件</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vim /etc/apt/source.list</span>
+<span class="token comment">#除了注释外，主要是以下内容</span>
+deb http://cn.archive.ubuntu.com/ubuntu/ bionic main restricted
+deb http://cn.archive.ubuntu.com/ubuntu/ bionic-updates main restricted
+deb http://cn.archive.ubuntu.com/ubuntu/ bionic universe
+deb http://cn.archive.ubuntu.com/ubuntu/ bionic-updates universe
+<span class="token comment">#格式  软件包地址（在线或本地）				发行版本代号		软件包的分类目录</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><ol>
+<li><em><strong>网络源服务搭建</strong></em></li>
+</ol>
+<p><em>一般我们会将系统自带的该文件做个备份，再将该文件修改为你想要的源地址，比如国内的源比较快，可以使用中科大的软件源镜像。</em></p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cp /etc/apt/source.list /etc/apt/source.list.bk</span>
+<span class="token comment">#备份 /etc/apt/source.list 源文件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vim /etc/apt/source.list</span>
+<span class="token comment">#编辑 /etc/apt/source.list，删除或注释所有内容后，输入下面的国内中科大的源，保存退出</span>
+deb https://mirrors.ustc.edu.cn/ubuntu/ xenial main restricted universe multiverse
+<span class="token comment"># deb-src https://mirrors.ustc.edu.cn/ubuntu/ xenial main main restricted universe multiverse</span>
+deb https://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse
+<span class="token comment"># deb-src https://mirrors.ustc.edu.cn/ubuntu/ xenial-updates main restricted universe multiverse</span>
+deb https://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse
+<span class="token comment"># deb-src https://mirrors.ustc.edu.cn/ubuntu/ xenial-backports main restricted universe multiverse</span>
+deb https://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse
+<span class="token comment"># deb-src https://mirrors.ustc.edu.cn/ubuntu/ xenial-security main restricted universe multiverse</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt-get update</span>
+<span class="token comment">#更新源</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br></div></div><ol start="2">
+<li><em><strong>本地源搭建</strong></em></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment">#先备份 /etc/apt/source.list 源文件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /mnt/cdrom</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /mnt/ubuntu-18.04.2-server-amd64.iso /mnt/cdrom/</span>
+<span class="token comment">#创建挂载目录，挂载镜像源</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vim /etc/apt/source.list</span>
+deb file:///mnt/cdrom xenial main
+<span class="token comment">#修改 /etc/apt/source.list 源文件，注释掉所有内容，加入上一句内容</span>
+<span class="token comment">#设置本地源，file 路径对应挂载的路径</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt-get update</span>
+<span class="token comment">#更新源</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div><h3 id="apt-常用命令" tabindex="-1"><a class="header-anchor" href="#apt-常用命令" aria-hidden="true">#</a> <em>apt 常用命令</em></h3>
+<ol>
+<li><em><strong>查询</strong></em></li>
+</ol>
+<ul>
+<li><em>查询 apt 源服务器上所有可安装的软件包列表</em></li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt list</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+apg/bionic,now <span class="token number">2.2</span>.3.dfsg.1-5 amd64 <span class="token punctuation">[</span>已安装，自动<span class="token punctuation">]</span>
+cubicsdr/bionic <span class="token number">0.2</span>.3+dfsg-1 amd64
+flvmeta/bionic <span class="token number">1.2</span>.1-1 amd64
+gzip/bionic,now <span class="token number">1.6</span>-5ubuntu1 amd64 <span class="token punctuation">[</span>已安装<span class="token punctuation">]</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token comment">#已安装的会显示 [已安装] 字样</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><ul>
+<li><em>查询 apt 源服务器中是否包含某个软件包</em></li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt list 包名</span>
+<span class="token comment">#查询单个软件包</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt list samba</span>
+samba/bionic-updates,bionic-security <span class="token number">2</span>:4.7.6+dfsg~ubuntu-0ubuntu2.23 amd64
+N: 还有 <span class="token number">1</span> 个版本。请使用 -a 选项来查看它<span class="token punctuation">(</span>他们<span class="token punctuation">)</span>。
+<span class="token comment">#如果没有的话，就不显示信息了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><ul>
+<li><em>搜索 apt 源服务器上所有和关键字相关的软件包</em></li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt search 关键字</span>
+<span class="token comment">#搜索源中含有关键字的所有软件包</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt search samba</span>
+4pane/bionic <span class="token number">5.0</span>-1 amd64
+  four-pane detailed-list <span class="token function">file</span> manager
+
+argonaut-samba/bionic,bionic <span class="token number">1.0</span>-1 all
+  Argonaut scripts to generate Samba share configurations
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token comment">#搜索含有关键字信息的包，有的没有关键字的包也显示出来，其实包的详细信息里是包含关键字的</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><ul>
+<li><em>查询指定软件包的详细信息</em></li>
+</ul>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt show 包名</span>
+<span class="token comment">#显示单个包的详细信息</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt show samba</span>
+Package: samba
+Version: <span class="token number">2</span>:4.7.6+dfsg~ubuntu-0ubuntu2.23
+Priority: optional
+Section: net
+Origin: Ubuntu
+Maintainer: Ubuntu Developers <span class="token operator">&lt;</span>ubuntu-devel-discuss@lists.ubuntu.com<span class="token operator">></span>
+Original-Maintainer: Debian Samba Maintainers <span class="token operator">&lt;</span>pkg-samba-maint@lists.alioth.debian.org<span class="token operator">></span>
+Bugs: https://bugs.launchpad.net/ubuntu/+filebug
+Installed-Size: <span class="token number">11.3</span> MB
+Pre-Depends: dpkg <span class="token punctuation">(</span><span class="token operator">>=</span> <span class="token number">1.15</span>.6~<span class="token punctuation">)</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><ol start="2">
+<li><em><strong>安装</strong></em></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt -y install 包名</span>
+	<span class="token function">install</span>		：安装
+	-y			：自动回答 yes。如果不加 -y，那么每个安装的软件都需要手工回答 <span class="token function">yes</span>
+<span class="token comment">#自动安装指定软件包，并解决依赖性</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><ol start="3">
+<li><em><strong>升级</strong></em></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt install --only-upgrade 包名</span>
+<span class="token comment">#升级单个软件包，但可能会出现升级后，原先的依赖包不支持更新后的软件，慎用</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt update</span>
+<span class="token comment">#更新可用软件包列表</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt upgrade</span>
+<span class="token comment">#通过 安装/升级 软件来更新系统</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><ol start="4">
+<li><em><strong>卸载</strong></em></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt remove 包名</span>
+	remove		：卸载
+<span class="token comment">#移除软件包</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># apt autoremove</span>
+<span class="token comment">#移除不需要的软件包</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p><em>apt 没有 yum 的软件组管理功能，但是不代表 apt 没有 yum 强大，各有各的优势。</em></p>
+<div class="custom-container tip"><p class="custom-container-title">*apt 和 apt-get*</p>
+<p><em>在基于 Debian 的 Linux 发行版中，apt-get 便是其中一款广受欢迎的命令行工具，另外一款较为流行的是 Aptitude 这一命令行与 GUI 兼顾的小工具。类似的命令还有其他，如apt-cache、apt-config 等。如你所见，这些命令都比较低级又包含众多功能，普通的 Linux 用户也许永远都不会使用到。换种说法来说，就是最常用的 Linux 包管理命令都被分散在了 apt-get、apt-cache 和 apt-config 这三条命令当中。</em></p>
+<p><em>apt 命令的引入就是为了解决命令过于分散的问题，它包括了 apt-get 命令出现以来使用最广泛的功能选项，以及 apt-cache 和 apt-config 命令中很少用到的功能。在使用 apt 命令时，用户不必再由 apt-get 转到 apt-cache 或 apt-config，而且 apt 更加结构化，并为用户提供了管理软件包所需的必要选项。</em></p>
+<p><em><strong>简单来说就是：apt = apt-get、apt-cache 和 apt-config 中最常用命令选项的集合。</strong></em></p>
+<p><em>目前还没有任何 Linux 发行版官方放出 apt-get 将被停用的消息，至少它还有比 apt 更多、更细化的操作功能。对于低级操作，仍然需要 apt-get。既然两个命令都有用，那么我该使用 apt 还是 apt-get 呢？作为一个常规 Linux 用户，系统极客建议大家尽快适应并开始首先使用 apt。不仅因为广大 Linux 发行商都在推荐 apt，更主要的还是它提供了 Linux 包管理的必要选项。</em></p>
+<p><em>最重要的是，apt 命令选项更少更易记，因此也更易用，所以没理由继续坚持 apt-get。</em></p>
+</div>
+<h2 id="源码包安装" tabindex="-1"><a class="header-anchor" href="#源码包安装" aria-hidden="true">#</a> 源码包安装</h2>
+<h3 id="源码包的安装准备" tabindex="-1"><a class="header-anchor" href="#源码包的安装准备" aria-hidden="true">#</a> 源码包的安装准备</h3>
+<ol>
+<li><strong>支持软件的安装</strong></li>
+</ol>
+<p>Linux 下的绝大多数源码包都是用 C 语言编写的，还有少部分是用 C++ 等其他程序语言编写的。所以，要想安装源码包，必须安装 C 语言编译器 gcc（如果是用 C+ 编写的程序，则还需要安装 gcc-c+）。我们可以先检测一下 gcc 是否已经安装，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rpm -q gcc</span>
+gcc-4.4.6-4.e16.i686
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><p>如果没有安装 gcc，则推荐大家采用 yum 安装方式安装。因为如果手工使用 rpm 命令安装，那么 gcc 所依赖的包太多了。命令如下:</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># yum -y install gcc</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>有了编译器，还需要考虑一个问题：假如“hello.c”只是一个源码文件，所以我们可以利用 gcc 手工编译。但是真正发布的源码包软件内的源码文件可能有成百上千个，而且这些文件之间都是有联系的，编译时有先后顺序。如果这样的源码文件需要手工编译，光想想就是一项难以完成的工作。这时就需要 make 命令来帮助我们完成编译，所以 make 也是必须安装的。我们也需要查看一下 make 是否已经安装，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># rpm -q make</span>
+make-3.81-20.e16.i686
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><ol start="2">
+<li><strong>源码包从哪里来</strong></li>
+</ol>
+<p>RPM 包是保存在 CentOS 6.3 的安装光盘中的，那么源码包从哪里来呢？是从官方网站上下载的，我们依然以下载和安装 apache 为例。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost yum.repos.d<span class="token punctuation">]</span><span class="token comment"># yum -y install wget</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><h3 id="源码包安装-1" tabindex="-1"><a class="header-anchor" href="#源码包安装-1" aria-hidden="true">#</a> 源码包安装</h3>
+<ol>
+<li><strong>注意事项</strong></li>
+</ol>
+<p>在安装之前，我们先来解释一下源码包的安装注意事项。</p>
+<ul>
+<li>
+<p>软件包是从互联网上下载的。比如 apache 是从网站 <a href="http://archive.apache.org/dist/httpd/" target="_blank" rel="noopener noreferrer">http://archive.apache.org/dist/httpd/<ExternalLinkIcon/></a> 上下载的。</p>
+</li>
+<li>
+<p>下载的软件包格式。下载格式一般都是压缩格式，常见的是“.tar.gz”或“.tar.bz2”，选择你习惯的格式下载即可。</p>
+</li>
+<li>
+<p>下载之后的源代码保存位置。Linux 是一个非常严谨的操作系统，每个目录的作用都是固定而且明确的，作为管理员，养成良好的操作习惯非常重要，其中在正确的目录中保存正确的数据就是一个约定俗成的习惯。在系统中保存源代码的位置主要有两个；<code>/usr/src</code> 和 <code>/usr/local/src</code>。其中，<code>/usr/src</code> 用来保存内核源代码：<code>/usr/local/src</code> 用来保存用户下载的源代码。</p>
+</li>
+<li>
+<p>软件安装位置。我们刚说了 Linux 非常注意每个目录的作用，所以安装软件也有默认目录，即 <code>/usr/local/软件名</code>。我们需要给安装的软件包单独规划一个安装目录，以便于管理和卸载。大家可以想象一下，如果我把每个软件都安装到 <code>/usr/local/</code> 目录下，但是没有给每个软件单独分配一个安装目录，那么以后还能分清哪个文件是哪个软件吗？这样一来也就不能正确地卸载软件了。</p>
+</li>
+<li>
+<p>软件安装报错。源码包如果安装不报错，那么安装还是很方便的。但是报错后的排错对刚学习的人来说还是有难度的，不过我们先要知道什么样的情况是报错。报错有两个典型特点，这两个特点必须都具备才是报错：其一是出现“enor”或“warning”字样；其二是安装过程停止。如果没有停止但是出现警告信息，那么只是软件中的部分功能不能使用，而不是报错。</p>
+</li>
+</ul>
+<ol start="2">
+<li><strong>安装步骤</strong></li>
+</ol>
+<p>我们来解释一下源码包安装的具体步骤。</p>
+<p>​	1) 下载软件包。</p>
+<p>​	2) 解压缩。</p>
+<p>​	3) 进入解压目录。</p>
+<p>​	4) <code>./configure</code> 软件配置与检查。</p>
+<blockquote>
+<p>这一步主要有三个作用：</p>
+<ul>
+<li>在安装之前需要检测系统环境是否符合安装要求。</li>
+<li>定义需要的功能选项。<code>./configure</code> 支持的功能选项较多，可以执行 <code>./configure -help</code> 命令查询其支持的功能。一般都会通过<code> ./configure --prefix=安装路径</code> 来指定安装路径。</li>
+<li>把系统环境的检测结果和定义好的功能选项写入 Makefile 文件，后续的编译和安装需要依赖这个文件的内容。</li>
+</ul>
+<p>需要注意的是，configure 不是系统命令，而是源码包软件自带的一个脚本程序，所以必须采用 <code>./configure</code> 方式执行（<code>./</code> 代表在当前目录下)。</p>
+</blockquote>
+<p>​	5) make 编译。</p>
+<blockquote>
+<p>make 会调用 gcc 编译器，并读取 Makefile 文件中的信息进行系统软件编译。编译的目的就是把源码程序转变为能被 Linux 识别的可执行文件，这些可执行文件保存在当前目录下。编译过程较为耗时，需要有足够的耐心。</p>
+</blockquote>
+<p>​	6) make clean：清空编译内容（非必需步骤）。</p>
+<blockquote>
+<p>如果在 <code>./configure</code> 或 <code>make</code> 编译中报错，那么我们在重新执行命令前一定要记得执行 <code>make clean</code> 命令，它会清空 Makefile 文件或编译产生的“.o”头文件。</p>
+</blockquote>
+<p>​	7) make install：安装。</p>
+<blockquote>
+<p>这才是真正的安装过程，一般会写清楚程序的安装位置。如果忘记指定安装目录，则可以把这个命令的执行过程保存下来，以备将来删除使用。</p>
+</blockquote>
+<ol start="3">
+<li><strong>举例安装 apache</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 1. 下载</span>
+<span class="token comment"># wget 下载到指定目录 /usr/local/src/</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># wget -P /usr/local/src/ https://mirrors.tuna.tsinghua.edu.cn/apache/httpd/httpd-2.2.9.tar.gz</span>
+
+<span class="token comment"># 2. 解压缩</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /usr/local/src/</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># tar -zxvf httpd-2.2.9.tar.gz</span>
+
+<span class="token comment"># 3. 进入解压缩目录</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ls</span>
+anaconda-ks.cfg		httpd-2.2.9	httpd-2.2.9.tar.gz	 install.log	 install.log.syslog
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd httpd-2.2.9</span>
+
+<span class="token comment"># 4. 软件配置</span>
+<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># ./configure --prefix=/usr/local/apache2</span>
+选项：
+	--prefix：指定安装目录
+checking <span class="token keyword">for</span> chosen layout. Apache
+checking <span class="token keyword">for</span> working <span class="token function">mkdir</span> -P<span class="token punctuation">..</span> <span class="token function">yes</span>
+ichecking build system type<span class="token punctuation">..</span>. <span class="token number">1686</span>-pc-14nux-gnu
+checking <span class="token function">host</span> system type<span class="token punctuation">..</span>. <span class="token number">1686</span>-pc-linux-gnu
+checking target system type<span class="token punctuation">..</span>. <span class="token number">1686</span>-pe-linux-gnu
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token comment">#这里的安装选项没有加载其他功能，只是指定了安装目录。“/usr/local/apache2”目录不需要手工建立，安装完成后会自动建立，这个目录是否生成也是检测软件是否正确安装的重要标志。</span>
+		<span class="token comment">#当然，在配置之前也可以查询一下 apache 支持的选项功能，命令如下:</span>
+		<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># ./configure --help | more</span>
+		<span class="token comment">#查询 apache 支持的选項功能（不是必需步果）</span>
+		
+<span class="token comment"># 5. 编译</span>
+<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># make</span>
+<span class="token comment">#这一步命令较为简单，但是编译时间较长，主要作用是把源码文件转换为二进制文件。</span>
+
+<span class="token comment"># 6. 安装</span>
+<span class="token punctuation">[</span>root@localnost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># make install</span>
+<span class="token comment">#如果不报错，这一步完成后就安装成功了。</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br></div></div><h3 id="源码包升级" tabindex="-1"><a class="header-anchor" href="#源码包升级" aria-hidden="true">#</a> 源码包升级</h3>
+<p>我们的软件如果进行了数据更新，那么是否需要先把整个软件卸载，然后重新安装呢？当然不需要，我们只需要下载补丁、打上补丁，重新编译和安装就可以了（不用 <code>./configure</code> 生成新的 Makefile 文件，make 命令也只是重新编译数据），速度会比重新安装一次快得多。</p>
+<ol>
+<li><strong>补丁的生成与使用</strong></li>
+</ol>
+<p>怎么知道两个软件之间的不同呢？难道需要手工比对两个软件吗？当然不是，Linux 有 <code>diff</code> 命令用来比较两个软件的不同，当然也是利用这个命令生成补丁文件的。那么我们先看看这个命令的格式。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost <span class="token punctuation">]</span><span class="token comment"># diff 选项 old new</span>
+<span class="token comment">#比较old 和new文件的不同</span>
+选项：
+	-a	：将任何文档当作文本文档处理
+	-b	：忽略空格造成的不同
+	-B	：忽略空白行造成的不同
+	-I	：忽略大小写造成的不同
+	-N	：当比较两个目录时，如果某个文件只在一个目录中，则在另一个目录中视作空文件
+	-r	：当比较目录时，递归比较子目录
+	-u	：使用同一输出格式
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div><p>我们举一个简单的例子，来看看补丁是怎么来的，然后应用一下这个补丁，看看有什么效果，这样就可以说明补丁的作用了。先写两个文件，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir teat</span>
+<span class="token comment">#建立测试目录</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd test</span>
+<span class="token comment">#进入测试目录</span>
+<span class="token punctuation">[</span>root@localhost test<span class="token punctuation">]</span><span class="token comment"># vi old.txt</span>
+our
+school
+is
+lampbrother
+<span class="token comment">#文件 old.txt。为了便于比较，将每行分开</span>
+<span class="token punctuation">[</span>root@localhost <span class="token builtin class-name">test</span><span class="token punctuation">)</span> <span class="token function">vi</span> new.txt
+our
+school
+is
+Lampbrother
+<span class="token keyword">in</span>
+Beljing
+<span class="token comment">#文件 new.txt </span>
+
+<span class="token punctuation">[</span>root@localhost <span class="token builtin class-name">test</span><span class="token punctuation">)</span><span class="token comment"># diff -Naur /root/test/old.txt /root/test/new.txt > txt.patch</span>
+<span class="token comment">#比较一下两个文件的不同，并生成补丁文件 txt.patch</span>
+<span class="token punctuation">[</span>root@localhost test<span class="token punctuation">]</span><span class="token comment"># vi txt.patch</span>
+<span class="token comment">#查看一下这个文件</span>
+--- /root/test/old.txt <span class="token number">2021</span>-05-20 <span class="token number">10</span>:35:46.446414105 +0800
++++ /root/test/new.txt <span class="token number">2021</span>-05-20 <span class="token number">10</span>:35:57.274469831 +0800
+@@ -2,3 +2,5 @@
+school
+is
+Lampbrother
++in
++Beljing
+<span class="token comment">#后一个文件比前一个文件多两行（用+表示）</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br></div></div><p>既然 <code>new.bxt</code> 比 <code>old.txt</code> 文件多了两行，那么我们能不能让 <code>old.txt</code> 文件按照补丁文件 <code>txt.patch</code> 进行更新呢？当然可以，使用命令 <code>patch</code> 即可。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost test<span class="token punctuation">]</span> patch -pn <span class="token operator">&lt;</span> 补丁文件
+<span class="token comment">#按照补丁文件进行更新</span>
+选项：
+	-Pn	：n 为数字。代表接照补丁文件中的路径，指定更新文件的位置
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>“-pn”不好理解，我们说明一下。补丁文件是要打入旧文件的，但是你当前所在的目录和补丁文件中记录的目录不一定是匹配的，所以就需要“-pn”选项来同步两个目录。比如，我当前在 <code>/root/test/</code> 目录中（我要打补丁的旧文件就在当前目录下），补丁文件中记录的文件目录为 <code>/root/test/old.txt</code>，这时如果写入“-p1”（在补丁文件目录中取消一级目录），那么补丁文件就会打入 <code>/root/test/</code><strong><code>root/test/old.txt</code></strong> 文件中，这显然是不对的。那如果写入的是“-p2”（在补丁文件目录中取清二级目录），那么补丁文件就会打入 <code>/root/test/</code><strong><code>test/old.txt</code></strong> 文件中，这显然也不对。如果写入的是“-p3”（在补丁文件目录中取消三级目录），那么补丁文件就会打入 <code>/root/test/</code><strong><code>old.txt</code></strong> 文件中，我们的 old.txt 文件就在这个目录下，所以应该用“-p3”选项。</p>
+<p>如果我的当前所在目录是 <code>/root/</code> 目录呢？因为补丁文件中记录的文件目录为 <code>/root/test/old.txt</code>，所以这里就应该用“-p2”选项，代表取消两级目录，补丁打在当前目录下的**<code>test/old.txt</code>** 文件上。</p>
+<p>大家可以这样理解：“-pn”就是想要在补丁文件中所记录的目录中取消几个<code>/</code>，n 就是几。去掉目录的目的是和当前所在目录匹配。</p>
+<p>那么我们更新一下“old.txt”文件，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost <span class="token builtin class-name">test</span><span class="token punctuation">)</span> patch -p3 <span class="token operator">&lt;</span> txt.patch
+patching <span class="token function">file</span> old.txt
+<span class="token comment">#给 o1d.txt 文件打补丁</span>
+<span class="token punctuation">[</span>root@localhost test<span class="token punctuation">]</span><span class="token comment"># cat old.txt</span>
+<span class="token comment">#查看一下 old.txt 文件内容</span>
+our
+school
+is
+lampbrother
+<span class="token keyword">in</span>
+Beijing
+<span class="token comment">#多出了 in Beljing 两行</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br></div></div><div class="custom-container tip"><p class="custom-container-title">注意</p>
+<ul>
+<li>给旧文件打补丁依赖的不是新文件，而是补丁文件，所以即使新文件被删除也没有关系。</li>
+<li>补丁文件中记录的目录和你当前所在目录是需要通过“-pn”选项来同步的。</li>
+</ul>
+</div>
+<ol start="2">
+<li><strong>给 apache 打入补丁</strong></li>
+</ol>
+<p>我们再举一个实际的例子。刚刚我们安装了 httpd-2.2.9 这个版本的程序，在官网上有这个版本的一个补丁“mod_proxy _ftp_CVE-2008-2939.diff”，这个补丁修补了 apache 代理 FTP 站点时，模块空指针引用拒绝服务攻击的漏洞。我们可以从 <a href="http://archive.apache.org/dist/httpd/patches/apply_to_2.2.9/" target="_blank" rel="noopener noreferrer">http://archive.apache.org/dist/httpd/patches/apply_to_2.2.9/<ExternalLinkIcon/></a> 网站上下载这个补丁。下面我们来看看如何安装这个补丁。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 1. 下载补丁文件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># wget http://archive.apache.org/dist/httpd/patches/apply_to_2.2.9/mod_proxy_ftp_CVE-2008-2939.diff</span>
+
+<span class="token comment"># 2. 把补丁文件复制到 apache 源码包解压目录中。</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cp mod_proxy_ftp_CVB-2008-2939.diff /usr/local/src/httpd-2.2.9</span>
+
+<span class="token comment"># 3. 打入补丁</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /usr/local/src/httpd-2.2.9</span>
+<span class="token comment">#进入 apache 源码目录</span>
+<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># vi mod_proxy_ftp_CVE-2008-2939.diff</span>
+<span class="token comment">#查看补丁文件</span>
+--- modules/proxy/mod_proxy_ftp.c		<span class="token punctuation">(</span>Revision <span class="token number">682869</span><span class="token punctuation">)</span>
++++ modules/proxy/mod proxy_ftp.c		<span class="token punctuation">(</span>Revision <span class="token number">682870</span><span class="token punctuation">)</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token comment">#查看一下补下文件中记录的目录，以便一会儿和当前所在目录同步</span>
+<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># patch -p0 &lt; mod_proxy_ftp_CVE-2008-2939.dift</span>
+<span class="token comment">#打入补下</span>
+<span class="token comment">#为什么是“-p0”呢？因为我们当前在“/usr/local/src/httpd-2.2.9”目录中，但是补丁文件中记录的目录是“modules/proxy/mod_ proxy_Ap.c”，这就在我当前所在目录中，一个“/”都不需要去掉，所以是“-p0”。</span>
+
+<span class="token comment"># 4. 重新编译</span>
+<span class="token punctuation">[</span>root@localhout httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># make</span>
+
+<span class="token comment"># 5. 重新安装</span>
+<span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># make install</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br></div></div><p>打补丁的方法会比重新安装少了 <code>./configure</code> 步骤，而且编译时也只是编译变化的地方，所以编译速度也更快。但是如果没有安装过 httpd-2.2.9，就需要先打入补丁，再依次执行 <code>./configure</code>、<code>make</code>、<code>make install</code> 命令。</p>
+<p>如果我不想要补丁中的内容呢？可以恢复吗？当然可以，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost httpd-2.2.9<span class="token punctuation">]</span><span class="token comment"># patch -R &lt; mod_proxy_ftp_CVE-2008-2939.diff</span>
+选项：
+	-R	：还原补丁
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><h3 id="源码包卸载" tabindex="-1"><a class="header-anchor" href="#源码包卸载" aria-hidden="true">#</a> 源码包卸载</h3>
+<p>我们在说源码包卸载之前，先回顾一下 Windows 系列操作系统中的软件卸载。在 Windows 系统中是不能用鼠标右键单击安装之后的软件，选择直接删除的，因为这样做会遗留大量的垃圾文件。这些垃圾文件越多，会导致 Windows 系统越不稳定。</p>
+<p>那么我们在 Linux 中删除源码包应该怎样操作呢？太简单了，只要找到软件的安装位置（还记得我们要求在安装时必须指定安装位置吗），然后直接删除就可以了。比如删除 apache，只需要执行如下命令即可，而且不会遗留任何垃圾文件。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># rm -rf /usr/local/apache2/</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>如果 apache 服务启动了，那么，记得先停止服务再删除。</p>
+<h3 id="函数库管理" tabindex="-1"><a class="header-anchor" href="#函数库管理" aria-hidden="true">#</a> 函数库管理</h3>
+<ol>
+<li><strong>什么是函数库</strong></li>
+</ol>
+<p>函数库其实就是函数，只不过是系统所调用的函数。这样说吧，我写了一个软件，所有的功能都需要我自己完成吗？其实是不需要的，因为很多功能是别人已经写好的，我只需要拿来使用就好了。这些有独立功能，可以被其他程序调用的程序就是函数。比如，我想打电话，那么我需要自己去制造和生产一部手机吗？当然不需要，我只需要明确我的需求，然后按照需求去买一部手机使用就可以了。</p>
+<ol start="2">
+<li><strong>函数库分类</strong></li>
+</ol>
+<p>当其他程序调用函数时，根据是否把函数直接整合到程序中而分<strong>为静态函数</strong>和<strong>动态函数</strong>，我们分别看看这两种函数的优缺点。</p>
+<ul>
+<li>静态函数库</li>
+</ul>
+<blockquote>
+<p>函数库文件一般以“*.a”扩展名结尾，这种函数库在被程序调用时会被直接整合到程序当中。</p>
+<p>优点：程序执行时，不需要再调用外部数据，可以直接执行。</p>
+<p>缺点：因为把所有内容都整合到程序中，所以编译生成的文件会比较大，升级比较困难,需要把整个程序重新编译。</p>
+</blockquote>
+<ul>
+<li>动态函数库</li>
+</ul>
+<blockquote>
+<p>函数库文件通常以“*.so”扩展名结尾，这种函数库在被程序调用时，并没有直接整合到程序当中，当程序需要用到函数库的功能时，再去读取函数库，在程序中只保存了函数库的指向，如图12-2 所示。</p>
+<p>优点：因为没有把整个函数库整合到程序中，所以文件较小，升级方便，不需要把整个程序重新编译，只需要重新编译安装函数库就好。</p>
+<p>缺点：程序在执行时需要调用外部函数，如果这时函数出现问题，或指向位置不正确，那么程序将不能正确执行。</p>
+</blockquote>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/lib.png" alt="lib" loading="lazy"></p>
+<p><strong>图12-2	<u>函数库调用</u></strong></p>
+</div>
+<p>目前 Linux 中的大多数函数库是动态函数库，主要是因为升级方便；但是函数的存放位置非常重要，而且不能更改。目前被系统程序调用的函数主要存放在 <code>/usr/lib</code> 和 <code>/lib</code> 中，而 Linux 内核所调用的函数库主要存放在 <code>lib/modules</code> 中。</p>
+<ol start="3">
+<li><strong>安装函数库</strong></li>
+</ol>
+<p>那么，系统中的可执行程序到底调用了哪些函数库呢？可以查询到吗？当然可以，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ldd -v 可执行文件名选项：</span>
+选项：
+	-v	：显示详细版本信息
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><p>比如，查看一下 <code>ls</code> 命令调用了哪些函数库，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ldd /bin/1s</span>
+	linux-vdso.so.1 <span class="token operator">=</span><span class="token operator">></span>  <span class="token punctuation">(</span>0x00007ffc5ebef000<span class="token punctuation">)</span>
+	libselinux.so.1 <span class="token operator">=</span><span class="token operator">></span> /lib64/libselinux.so.1 <span class="token punctuation">(</span>0x00007fe85ab8a000<span class="token punctuation">)</span>
+	libcap.so.2 <span class="token operator">=</span><span class="token operator">></span> /lib64/libcap.so.2 <span class="token punctuation">(</span>0x00007fe85a985000<span class="token punctuation">)</span>
+	libacl.so.1 <span class="token operator">=</span><span class="token operator">></span> /lib64/libacl.so.1 <span class="token punctuation">(</span>0x00007fe85a77c000<span class="token punctuation">)</span>
+	libc.so.6 <span class="token operator">=</span><span class="token operator">></span> /lib64/libc.so.6 <span class="token punctuation">(</span>0x00007fe85a3ae000<span class="token punctuation">)</span>
+	libpcre.so.1 <span class="token operator">=</span><span class="token operator">></span> /lib64/libpcre.so.1 <span class="token punctuation">(</span>0x00007fe85a14c000<span class="token punctuation">)</span>
+	libdl.so.2 <span class="token operator">=</span><span class="token operator">></span> /lib64/libdl.so.2 <span class="token punctuation">(</span>0x00007fe859f48000<span class="token punctuation">)</span>
+	/lib64/ld-linux-x86-64.so.2 <span class="token punctuation">(</span>0x00007fe85adb1000<span class="token punctuation">)</span>
+	libattr.so.1 <span class="token operator">=</span><span class="token operator">></span> /lib64/libattr.so.1 <span class="token punctuation">(</span>0x00007fe859d43000<span class="token punctuation">)</span>
+	libpthread.so.0 <span class="token operator">=</span><span class="token operator">></span> /lib64/libpthread.so.0 <span class="token punctuation">(</span>0x00007fe859b27000<span class="token punctuation">)</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p>新安装了一个函数库，如何让它被系统识别？其实软件如果是正常安装的，则是不需要手工调整函数库的。但是万一没有安装正确，需要手工安装呢？那也很简单，只要把函数库放入指定位置，一般放在 <code>/usr/lib</code> 或 <code>/lib</code> 中，然后把函数库所在目录写入 <code>/etc/ld.so.conf</code> 文件中。注意是写入<strong>函数库所在目录</strong>，而不是写入函数库的文件名。比如:</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cp *.so /usr/lib/</span>
+<span class="token comment">#把函数库复制到 /usr/lib/目录中</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vi /etc/ld.so.conf</span>
+<span class="token comment">#修改函数库配置文件</span>
+include ld.so.conf.d/*.conf
+/usr/lib
+<span class="token comment">#写入函数库所在目录（其实 /usr/lib/ 目录默认已经被识别）</span>
+
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>接着使用 <code>ldconfig</code> 命令重新读取 <code>/etc/ld.so.conf</code> 文件，把新函数库读入缓存即可。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ldconfig</span>
+<span class="token comment">#从 /etc/1d.so.conf 文件中把函数库读入缓存</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ldconfig -p</span>
+<span class="token comment">#列出系统缓存中所有识别的函数库</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><h2 id="脚本程序包管理" tabindex="-1"><a class="header-anchor" href="#脚本程序包管理" aria-hidden="true">#</a> 脚本程序包管理</h2>
+<h3 id="脚本程序简介" tabindex="-1"><a class="header-anchor" href="#脚本程序简介" aria-hidden="true">#</a> 脚本程序简介</h3>
+<p>脚本程序包并不多见，所以在软件包分类中并没有把它列为一类。它更加类似于 Windows 下的程序安装，有一个可执行的安装程序，只要运行安装程序，然后进行简单的功能定制选择（比如指定安装目录等），就可以安装成功，只不过是在字符界面下完成的。</p>
+<p>目前常见的脚本程序以各类硬件的驱动居多，我们需要学习一下这类软件的安装方式，以备将来不时之需。</p>
+<h3 id="webmin-安装" tabindex="-1"><a class="header-anchor" href="#webmin-安装" aria-hidden="true">#</a> Webmin 安装</h3>
+<ol>
+<li><strong>简介</strong></li>
+</ol>
+<p>我们来看看脚本程序如何安装和使用。安装一个叫作 Webmin 的工具软件，Webmin 是一个基于 Web 的系统管理界面。借助任何支持表格和表单的浏览器（和 File Manager 模块所需要的 Java），你就可以设置用户账号、apache、DNS、文件共享等。Webmin 包括一个简单的 Web 服务器和许多 CGI 程序，这些程序可以直接修改系统文件，比如 <code>/etc/inetd.conf</code> 和 <code>/etc/passwd</code>。 Web 服务器和所有的 CGI 程序都是用 Perl 语言编写的，没有使用任何非标准 Perl 模块。也就是说，Webmin 是一个用 Perl 语言写的、可以通过浏览器管理 Linux 的软件。</p>
+<ol start="2">
+<li><strong>安装步骤</strong></li>
+</ol>
+<p>首先下载 Webmin 软件，地址为<a href="https://github.com/webmin/webmin/releases" target="_blank" rel="noopener noreferrer">https://github.com/webmin/webmin/releases<ExternalLinkIcon/></a>，这里下载的是 webmin-1.610.tar.gz。</p>
+<p>接下来解压缩软件，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 1) 首先下载 Webmin 软件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># wget -O webmin-1.972.tar.gz https://github.com/webmin/webmin/archive/refs/tags/1.972.tar.gz</span>
+
+<span class="token comment"># 2) 接下来解压缩软件</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># tar -zxvf webmin-1.972.tar.gz</span>
+
+<span class="token comment"># 3) 进入解压目录</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token builtin class-name">cd</span> webmin-1.972
+
+<span class="token comment"># 4) 执行安装程序 setup.sh，并指定功能选项</span>
+<span class="token punctuation">[</span>root@localhost webmin-1.610<span class="token punctuation">]</span><span class="token comment"># ./setup.sh</span>
+***********************************************************************
+*            Welcome to the Webmin setup script, version <span class="token number">1.972</span>        *
+***********************************************************************
+Webmin is a web-based interface that allows Unix-like operating
+systems and common Unix services to be easily administered.
+
+Installing Webmin <span class="token keyword">in</span> /root/webmin-1.972 <span class="token punctuation">..</span>.
+
+***********************************************************************
+Webmin uses separate directories <span class="token keyword">for</span> configuration files and log files.
+Unless you want to run multiple versions of Webmin at the same <span class="token function">time</span>
+you can just accept the defaults.
+
+Config <span class="token function">file</span> directory <span class="token punctuation">[</span>/etc/webmin<span class="token punctuation">]</span>: /usr/local/webmin
+<span class="token comment">#选择安装位置，默认安装在 /etc/webmin 目录下，则直接回车；或者输入指定的位置</span>
+Log <span class="token function">file</span> directory <span class="token punctuation">[</span>/var/webmin<span class="token punctuation">]</span>: 
+<span class="token comment">#日至文件保存位置，直接回车，选择默认位置</span>
+
+***********************************************************************
+Webmin is written entirely <span class="token keyword">in</span> Perl. Please enter the full path to the
+Perl <span class="token number">5</span> interpreter on your system.
+
+Full path to perl <span class="token punctuation">(</span>default /usr/bin/perl<span class="token punctuation">)</span>:
+<span class="token comment">#指定 perl 语言的安装位置，直接回车，选择默认位置，perl 默认就安装在这里</span>
+
+Testing Perl <span class="token punctuation">..</span>.
+Perl seems to be installed ok
+
+***********************************************************************
+Operating system name:    CentOS Linux
+Operating system version: <span class="token number">7.9</span>.2009
+
+***********************************************************************
+Webmin uses its own password protected web server to provide access
+to the administration programs. The setup script needs to know <span class="token builtin class-name">:</span>
+ - What port to run the web server on. There must not be another
+   web server already using this port.
+ - The login name required to access the web server.
+ - The password required to access the web server.
+ - If the webserver should use SSL <span class="token punctuation">(</span>if your system supports it<span class="token punctuation">)</span>.
+ - Whether to start webmin at boot time.
+
+Web server port <span class="token punctuation">(</span>default <span class="token number">10000</span><span class="token punctuation">)</span>: 
+<span class="token comment">#指定 webmin 监听的端口，直接回车，默认选定 10000</span>
+Login name <span class="token punctuation">(</span>default admin<span class="token punctuation">)</span>: admin
+<span class="token comment">#输入登入 webmin 的用户名</span>
+Login password: 
+<span class="token comment">#输入登陆密码</span>
+Password again:
+<span class="token comment">#再次输入登陆密码</span>
+Use SSL <span class="token punctuation">(</span>y/n<span class="token punctuation">)</span>:n
+<span class="token comment">#是否启用 SSL 功能</span>
+The Perl SSLeay library is not installed. SSL not available.
+<span class="token comment"># apache 默认没有启动 SSL 功能，所以 SSL 没有被激活</span>
+Start Webmin at boot <span class="token function">time</span> <span class="token punctuation">(</span>y/n<span class="token punctuation">)</span>: y
+<span class="token comment">#是否在开机的同时启动 webmin</span>
+***********************************************************************
+Creating web server config files<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Creating access control file<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Inserting path to perl into scripts<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Creating start and stop scripts<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Copying config files<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Configuring Webmin to start at boot time<span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Creating uninstall script /usr/local/webmin/uninstall.sh <span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Changing ownership and permissions <span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Running postinstall scripts <span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Enabling background status collection <span class="token punctuation">..</span>
+<span class="token punctuation">..</span>done
+
+Attempting to start Webmin mini web server<span class="token punctuation">..</span>
+Starting Webmin server <span class="token keyword">in</span> /root/webmin-1.972
+<span class="token punctuation">..</span>done
+
+***********************************************************************
+Webmin has been installed and started successfully. Use your web
+browser to go to
+
+  http://localhost.localdomain:10000/
+
+and login with the name and password you entered previously.
+<span class="token comment">#安装完成</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br><span class="line-number">48</span><br><span class="line-number">49</span><br><span class="line-number">50</span><br><span class="line-number">51</span><br><span class="line-number">52</span><br><span class="line-number">53</span><br><span class="line-number">54</span><br><span class="line-number">55</span><br><span class="line-number">56</span><br><span class="line-number">57</span><br><span class="line-number">58</span><br><span class="line-number">59</span><br><span class="line-number">60</span><br><span class="line-number">61</span><br><span class="line-number">62</span><br><span class="line-number">63</span><br><span class="line-number">64</span><br><span class="line-number">65</span><br><span class="line-number">66</span><br><span class="line-number">67</span><br><span class="line-number">68</span><br><span class="line-number">69</span><br><span class="line-number">70</span><br><span class="line-number">71</span><br><span class="line-number">72</span><br><span class="line-number">73</span><br><span class="line-number">74</span><br><span class="line-number">75</span><br><span class="line-number">76</span><br><span class="line-number">77</span><br><span class="line-number">78</span><br><span class="line-number">79</span><br><span class="line-number">80</span><br><span class="line-number">81</span><br><span class="line-number">82</span><br><span class="line-number">83</span><br><span class="line-number">84</span><br><span class="line-number">85</span><br><span class="line-number">86</span><br><span class="line-number">87</span><br><span class="line-number">88</span><br><span class="line-number">89</span><br><span class="line-number">90</span><br><span class="line-number">91</span><br><span class="line-number">92</span><br><span class="line-number">93</span><br><span class="line-number">94</span><br><span class="line-number">95</span><br><span class="line-number">96</span><br><span class="line-number">97</span><br><span class="line-number">98</span><br><span class="line-number">99</span><br><span class="line-number">100</span><br><span class="line-number">101</span><br><span class="line-number">102</span><br><span class="line-number">103</span><br><span class="line-number">104</span><br><span class="line-number">105</span><br><span class="line-number">106</span><br><span class="line-number">107</span><br><span class="line-number">108</span><br><span class="line-number">109</span><br><span class="line-number">110</span><br></div></div><p>在浏览器地址栏中输入“http://192.168.122.55:10000/”（自己本机的 IP 地址），然后输入用户名和密码，就可以登录到 Webmin 界面，如图12-3 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/webmin.png" alt="webmin" loading="lazy"></p>
+<p><strong>图12-3	<u>Webmin 登录界面</u></strong></p>
+</div>
+<p>当然，我们并不是要讲解 Webmin 管理界面如何使用，而是要讲解脚本程序如何安装，所以工作已经完成。这种脚本安装简单快速，不过需要软件发行商发布安装脚本。但是 Limux中的绝大多数软件是没有这种脚本的。</p>
+<h2 id="软件包的选择" tabindex="-1"><a class="header-anchor" href="#软件包的选择" aria-hidden="true">#</a> 软件包的选择</h2>
+<p>至此，Linux 中的软件安装方式我们就讲完了，是不是比 Windows 中的软件安装要复杂一些。不过这也说明 Windows 下的病毒和木马是不能直接感染 Linux 的，因为它们的软件包是不一样的。</p>
+<p>不过，在安装软件的时候，到底应该使用二进制包还是源码包？我们做一下总结和推荐，当然你也可以按照自己的意愿安装。</p>
+<p>软件包安装注意事项：</p>
+<ul>
+<li>
+<p>如果是 Linux 的底层模块和自带软件，则推荐使用 RPM（DPKG）包安装，比如 gcc、图形界面、开发库等。另外，不需要手工定制功能的软件，都推荐使用 RMP（DPKG）包安装，毕竟安装简单。</p>
+</li>
+<li>
+<p>如果是在服务器上应用的服务程序，则推荐使用源码包安装，比如 apache、DNS、Mail 等服务程序。这样它们更适合你的服务器系统，性能更加优化，功能完全由你自由定义。</p>
+</li>
+<li>
+<p>如果要安装二进制包程序，那么既可以手工使用 RPM （DPKG）包安装，也可以使用 yum（apt） 安装。但是如果要卸载程序，则最好不要使用 yum（apt可以） 卸载，因为容易在卸载某个软件依赖包的时候，把 Linux 系统依赖包也卸载掉，从而导致系统崩溃。</p>
+</li>
+</ul>
+</template>

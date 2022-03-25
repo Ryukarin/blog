@@ -1,0 +1,1569 @@
+<template><p>文件系统这个名词大家都很陌生，不过如果说成分区，大家就比较容易理解了。原先每个分区只能格式化为一个文件系统，所以我们可以认为文件系统就是指分区。不过随着技术的进步，现在一个文件系统可以由几个分区组成，或者一个分区可以格式化为几个不同的文件系统，所以我们已经不能把文件系统和分区等同对待了。不过，为了便于理解，大家可以把文件系统想象成分区。下面会介绍硬盘的基本结构、Linux 中常见的文件系统，<code>fdisk</code> 命令分区和 swap 分区的手工分配等内容。</p>
+<h2 id="硬盘结构" tabindex="-1"><a class="header-anchor" href="#硬盘结构" aria-hidden="true">#</a> 硬盘结构</h2>
+<p>硬盘是计算机的主要外部存储设备。计算机中的存储设备种类非常多，常见的主要有软盘、硬盘、光盘、U 盘等，甚至还有网络存储设备 SAN、NAS 等，不过我们使用最多的还是硬盘。</p>
+<p>如果从存储数据的介质上来区分，那么硬盘可以分为<strong>机械硬盘</strong>（Hard Disk Drive，HDD）和<strong>固态硬盘</strong>（Solid State Disk，SSD），机械硬盘采用磁性碟片来存储数据，而固态硬盘是通过闪存颗粒来存储数据的。</p>
+<h3 id="机械硬盘" tabindex="-1"><a class="header-anchor" href="#机械硬盘" aria-hidden="true">#</a> 机械硬盘</h3>
+<ol>
+<li><strong>机械硬盘的物理结构</strong></li>
+</ol>
+<p>我们先来看看最常见的机械硬盘。机械硬盘的外观大家可能都见过，那么机械硬盘拆开后是什么样子的呢？如图15-1 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd.jpg" alt="hdd" loading="lazy"></p>
+<p><strong>图15-1	<u>机械硬盘结构</u></strong></p>
+</div>
+<p>机械硬盘主要由<strong>磁盘盘片、磁头、主轴与传动轴等</strong>组成，我们的数据就存放在磁盘盘片当中。大家见过老式的留声机吗？留声机上使用的唱片和我们的磁盘盘片非常相似，只不过留声机只有一个磁头，而硬盘是上下双磁头，盘片在两个磁头中间高速旋转，类似图15-2。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_1.jpg" alt="hdd1" loading="lazy"></p>
+<p><strong>图15-2	<u>磁盘盘片</u></strong></p>
+</div>
+<p>也就是说，机械硬盘是上下盘面同时进行数据读取的。而且机械硬盘的旋转速度要远高于唱片（目前机械硬盘的常见转速是 7200 r/min），所以机械硬盘在读取或写入数据时，非常害怕晃动和磕碰。另外，因为机械硬盘的超高转速，如果内部有灰尘，则会造成磁头或盘片的损坏，所以机械硬盘内部是封闭的，如果不是在无尘环境下，则禁止拆开机械硬盘。</p>
+<ol start="2">
+<li><strong>机械硬盘的逻辑结构</strong></li>
+</ol>
+<p>我们已经知道数据是写入破盘盘片的，那么数据是按照什么结构写入的呢？机械硬盘的逻辑结构主要分为<strong>磁道、扇区和柱面</strong>。我们来看看图15-3。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_2.jpg" alt="hdd2" loading="lazy"></p>
+<p><strong>图15-3	<u>磁道和扇区</u></strong></p>
+</div>
+<p><strong>什么是磁道呢</strong>？每个盘片都在逻辑上拥有很多的同心圆，最外面的同心圆就是 0 磁道。我们将每个同心圆称作磁道（注意，磁道只是逻辑结构，在盘面上并没有真正的同心圆）。硬盘的磁道密度非常高，通常一面上就有上千个磁道。但是相邻的磁道之间并不是紧挨着的，这是因为磁化单元相隔太近会相互产生影响。</p>
+<p><strong>那扇区又是什么呢</strong>？扇区其实是很形象的，大家都见过折叠的纸扇吧，纸扇打开后是半圆形或扇形的，不过这个扇形是由每个扇骨组合形成的。在磁盘上每个同心圆是磁道，从圆心向外呈放射状地产生分割线（扇骨），将每个磁道等分为若干弧段，每个弧段就是一个扇区。每个扇区的大小是固定的，为 <strong>512 Byte</strong>。扇区也是磁盘的最小存储单位。</p>
+<p><strong>那柱面又是什么呢</strong>？如果硬盘是由多个盘片组成的，每个盘面都被划分为数目相等的磁道，那么所有盘片都会从外向内进行磁道编号，最外侧的就是 0 磁道。具有相同编号的磁道会形成一个圆柱，这个圆柱就被称作磁盘的柱面，如图15-4 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_3.jpg" alt="hdd3" loading="lazy"></p>
+<p><strong>图15-4	<u>柱面</u></strong></p>
+</div>
+<p>硬盘的大小是使用“<strong>磁头数×柱面数×扇区数×每个扇区的大小</strong>”这样的公式来计算的。</p>
+<p>其中，磁头数（Heads）表示硬盘共有几个磁头，也可以理解为硬盘有几个盘面，然后乘以 2；柱面数（Cylinders）表示硬盘每面盘片有几条磁道；扇区数（Sectons）表示每条磁道上有几个扇区；每个扇区的大小一般是 512 Byte。</p>
+<ol start="3">
+<li><strong>硬盘的接口</strong></li>
+</ol>
+<p>机械硬盘通过接口与计算机主板进行连接。硬盘的读取和写入速度与接口有很大关系。大家都见过大礼堂吧，大礼堂中可以容纳很多人，但是如果只有一扇很小的门，那么人是很难进入或出来的，这样会造成拥堵，甚至会出现事故。机械硬盘的读取和写入也是一样的，如果接口的性能很差，则同样会影响机械硬盘的性能。目前我们常见的机械硬盘接口有这样几种。</p>
+<ul>
+<li>IDE 硬盘接口（Integrated Drive Electronics，并口，即电子集成驱动器）也称作“ATA 硬盘”或“PATA 硬盘”，是早期机械硬盘的主要接口，ATA133 硬盘的理论速度可以达到 133MB/s（此速度为理论平均值)，IDE 硬盘接口如图15-5 所示。</li>
+</ul>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_4.jpg" alt="hdd4" loading="lazy"></p>
+<p><strong>图15-5	<u>IDE 硬盘接口</u></strong></p>
+</div>
+<ul>
+<li>SATA 接口（Serial ATA，串口）是速度更高的硬盘标准，具备了更高的传输速度，并具备了更强的纠错能力。目前已经是 SATA 三代，理论传输速度达到 600MB/s（此速度为理论平均值)，如图15-6 所示。</li>
+</ul>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_5.jpg" alt="hdd5" loading="lazy"></p>
+<p><strong>图15-6	<u>SATA 硬盘接口</u></strong></p>
+</div>
+<ul>
+<li>SCSI 接口（Small Computer System Interface，小型计算机系统接口）广泛应用在服务器上，具有应用范围广、多任务、带宽大、CPU 占用率低及支持热插拔等优点，理论传输速度达到 320MB/s，如图15-7 所示。</li>
+</ul>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_6.jpg" alt="hdd6" loading="lazy"></p>
+<p><strong>图15-7	<u>SCSI 硬盘接口</u></strong></p>
+</div>
+<ul>
+<li>M.2 接口（也就是以前经常提到的 NGFF，即 Next Generation Form Factor）是为超极本（Ultrabook）量身定做的新一代接口标准接口。无论规格尺寸，还是传输性能，都有很大的提升，理论带宽最大可达 4GB/s，如图15-8 所示。</li>
+</ul>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/hdd_7.jpg" alt="hdd7" loading="lazy"></p>
+<p><strong>图15-8	<u>M.2 硬盘接口</u></strong></p>
+</div>
+<h3 id="固态硬盘" tabindex="-1"><a class="header-anchor" href="#固态硬盘" aria-hidden="true">#</a> 固态硬盘</h3>
+<p>固态硬盘和传统的机械硬盘最大的区别就是不再采用盘片进行数据存储，而采用存储芯片进行数据存储。固态硬盘的存储芯片主要分为两种：一种是采用闪存作为存储介质的；另一种是采用 DRAM 作为存储介质的。目前使用较多的主要是采用闪存作为存储介质的固态硬盘，如图15-9 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/ssd.jpg" alt="ssd" loading="lazy"></p>
+<p><strong>图15-9	<u>固态硬盘</u></strong></p>
+</div>
+<p>固态硬盘和机械硬盘对比主要有以下一些特点，如表15-1 所示。</p>
+<p><strong>表15-1	<u>固态硬盘和机械硬盘对比</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>对比项目</th>
+<th>固态硬盘</th>
+<th>机械硬盘</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>容量</td>
+<td>较小</td>
+<td><strong>大</strong></td>
+</tr>
+<tr>
+<td>读/写速度</td>
+<td><strong>极快</strong></td>
+<td>—般</td>
+</tr>
+<tr>
+<td>写入次数</td>
+<td>5000〜100000 次</td>
+<td><strong>没有限制</strong></td>
+</tr>
+<tr>
+<td>工作噪声</td>
+<td><strong>极低</strong></td>
+<td>有</td>
+</tr>
+<tr>
+<td>工作温度</td>
+<td><strong>极低</strong></td>
+<td>较高</td>
+</tr>
+<tr>
+<td>防震</td>
+<td><strong>很好</strong></td>
+<td>怕震动</td>
+</tr>
+<tr>
+<td>重量</td>
+<td><strong>低</strong></td>
+<td>高</td>
+</tr>
+<tr>
+<td>价格</td>
+<td>高</td>
+<td><strong>低</strong></td>
+</tr>
+</tbody>
+</table>
+<p>大家可以发现，固态硬盘因为丢弃了机械硬盘的物理结构，所以相比机械硬盘具有了低能耗、无噪声、抗震动、低散热、体积小和速度快的优势；不过价格相比机械硬盘更高，而且使用寿命有限。</p>
+<h2 id="linux-中常见的文件系统" tabindex="-1"><a class="header-anchor" href="#linux-中常见的文件系统" aria-hidden="true">#</a> Linux 中常见的文件系统</h2>
+<p>硬盘是用来存储数据的，我们可以将其想象成柜子，只不过柜子是用来存储衣物的。分区就是把一个大柜子按照要求分割成几个小柜子（组合衣柜）；格式化就是在每个小柜子中打入隔断，决定每个隔断的大小和位置，然后在柜门上贴上标签，标签中写清楚每件衣服保存的隔断的位置和这件衣服的一些特性（比如衣服是谁的，衣服的颜色、大小等）。很多人认为格式化的目的就是清空数据，其实格式化是为了写入文件系统（就是在硬盘中打入隔断并贴上标签）。</p>
+<h3 id="文件系统的特性" tabindex="-1"><a class="header-anchor" href="#文件系统的特性" aria-hidden="true">#</a> 文件系统的特性</h3>
+<p>我们已经知道了，格式化是为了规划和写入文件系统。那么，Linux 中的文件系统到底是什么？它是什么样子的呢？在 CentOS 6.3 系统中默认的文件系统是 ext4，它是 ext3 文件系统的升级版。ext4 文件系统在性能、伸缩性和可靠性方面进行了大量改进。ext4 文件系统的变化可以说是翻天覆地的，比如向下兼容 ext3、最大 1EB 文件系统和 16TB 文件、无限数量子目录、Extents 连续数据块概念、多块分配、延迟分配、持久预分配、快速 FSCK、日志校验、无日志模式、在线碎片整理、inode 增强、默认启用 banier 等。ext4 文件系统是由 Theodore Tso（ext3 的维护者）领导的开发团队实现的，并引入 2.6.19 内核中。</p>
+<p>那么，文件系统到底是如何运作的呢？文件系统中除要保存文件的数据外，还要保存文件的属性，如文件的权限、所有者、属组和时间参数等内容。文件系统把文件的数据和属性分开存放，把文件的数据放入 date block 中（数据块，保存文件的具体数据。类似衣柜的隔断，用来真正保存衣物），把文件的属性保存在 inode 中（i 节点，保存文件属性，如权限、所有者、属组和时间参数等。类似衣柜门上贴的标签，标签中写入衣物的特性）。每个 block 和 inode 都有序列号，用来区分和编码。另外，还有一个 super block（超级块）用于记录整个文件系统的信息，如 inode 和 block 的总量、已经使用量和剩余量。总结一下：</p>
+<ul>
+<li>
+<p>super block（超级块）：记录整个文件系统的信息，包括 block 与 inode 的总量、已经使用的 inode 和 block 的数量、未使用的 inode 和 block 的数量、block 与 inode 的大小，文件系统的挂载时间、最近一次的写入时间、最近一次的磁盘检验时间等。</p>
+</li>
+<li>
+<p>date block（数据块，也称作 block）：用来实际保存数据（柜子的隔断），block 的大小（1KB、2KB 或4KB）和数量在格式化后就已经决定，不能改变，除非重新格式化（在制作柜子的时候，隔断大小就已经决定，不能更改，除非重新制作柜子）。每个 block 只能保存一个文件的数据，如果文件数据小于一个 block 块，那么这个 block 的剩余空间不能被其他文件使用；如果文件数据大于一个 block 块，则要占用多个 block 块。Windows 中磁盘碎片整理工具的原理就是把一个文件占用的多个 block 块尽量整理到一起，这样可以加快读/写速度。</p>
+</li>
+<li>
+<p>inode （i 节点，柜门上的标签）：用来记录文件的权限（r、w、x)、文件的所有者和属组、文件的大小、文件的状态改变时间（ctime)、文件的最近一次读取时间（atime）、文件的最近一次修改时间（mtime)、文件的数据真正保存的 block 编号。每个文件需要占用一个 inode。</p>
+</li>
+</ul>
+<p>大家注意到了吗？在 inode 中并没有保存文件的文件名，那是因为文件名是文件所在目录的数据，所以保存在上一级目录的 block 中。还记得我们在讲权限命令的时候说过，要对文件的上一级目录拥有 w 权限，才能删除目录中的文件，就是因为文件名是保存在目录的 block 中的。</p>
+<h3 id="linux-支持的常见文件系统" tabindex="-1"><a class="header-anchor" href="#linux-支持的常见文件系统" aria-hidden="true">#</a> Linux 支持的常见文件系统</h3>
+<p>Linux 系统能够支持的文件系统非常多，除 Linux 默认文件系统 ext2、ext3 和 ext4 之外，还能支持 fat16、fat32、NTFS（需要重新编译内核）等 Windows 文件系统。也就是说，Linux 可以通过挂载的方式使用 Windows 文件系统中的数据。Linux 所能够支持的文件系统在 <code>/usr/src/kemels/当前系统版本/fs</code> 目录中（需要在安装时选择），该目录中的每个子目录都是一个可以识别的文件系统。我们介绍较为常见的 Linux 支持的文件系统，如表15-2 所示。</p>
+<p><strong>表15-2	<u>常见的 Linux 支持的文件系统</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>文件系统</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ext</td>
+<td>Linux 中最早的文件系统，由于在性能和兼容性上具有很多缺陷，现在已经很少使用</td>
+</tr>
+<tr>
+<td>ext2</td>
+<td>是 ext 文件系统的升级版本，Red Hat Linux 7.2 版本以前的系统默认都是 ext2 文件系统。于 1993 年发布，支持最大 16TB 的分区和最大 2TB 的文件（1TB=1024GB=1024x1024KB）</td>
+</tr>
+<tr>
+<td>ext3</td>
+<td>是 ext2 文件系统的升级版本，最大的区别就是带日志功能，以便在系统突然停止时提高文件系统的可靠性。支持最大 16TB 的分区和最大 2TB 的文件</td>
+</tr>
+<tr>
+<td>ext4</td>
+<td>是 ext3 文件系统的升级版。ext4 在性能、伸缩性和可靠性方面进行了大量改进。ext4 的变化可以说是翻天覆地的，比如向下兼容 ext3、最大 1EB 文件系统和 16TB 文件、无限数量子目录、Extents 连续数据块 概念、多块分配、延迟分配、持久预分配、快速 FSCK、日志校验、无日志模式、在线碎片整理、inode 增强、默认启用 barrier 等。它是 CentOS 6.3 的默认文件系统</td>
+</tr>
+<tr>
+<td>xfs</td>
+<td>被业界称为最先进、最具有可升级性的文件系统技术，由 SGI 公司设计，目前最新的 CentOS 7 版本默认使用的就是此文件系统。</td>
+</tr>
+<tr>
+<td>swap</td>
+<td>swap 是 Linux 中用于交换分区的文件系统(类似于 Windows 中的虚拟内存)，当内存不够用时，使用交换分区暂时替代内存。一般大小为内存的 2 倍，但是不要超过 2GB。它是 Linux 的必需分区</td>
+</tr>
+<tr>
+<td>NFS</td>
+<td>NFS 是网络文件系统(Network File System)的缩写，是用来实现不同主机之间文件共享的一种网络服务，本地主机可以通过挂载的方式使用远程共享的资源</td>
+</tr>
+<tr>
+<td>iso9660111</td>
+<td>光盘的标准文件系统。Linux 要想使用光盘，必须支持 iso9660 文件系统</td>
+</tr>
+<tr>
+<td>fat</td>
+<td>就是 Windows 下的 fatl6 文件系统，在 Linux 中识别为 fat</td>
+</tr>
+<tr>
+<td>vfat</td>
+<td>就是 Windows 下的 fat32 文件系统，在 Linux 中识别为 vfat。支持最大 32GB 的分区和最大 4GB 的文件</td>
+</tr>
+<tr>
+<td>NTFS</td>
+<td>就是 Windows 下的 NTFS 文件系统，不过 Linux 默认是不能识别 NTFS 文件系统的，如果需要识别，则需要重新编译内核才能支持。它比 fat32 文件系统更加安全，速度更快，支持最大 2TB 的分区和最大 64GB 的文件</td>
+</tr>
+<tr>
+<td>ufs</td>
+<td>Sun 公司的操作系统 Solaris 和 SunOS 所采用的文件系统</td>
+</tr>
+<tr>
+<td>proc</td>
+<td>Linux 中基于内存的虚拟文件系统，用来管理内存存储目录 /proc</td>
+</tr>
+<tr>
+<td>sysfs</td>
+<td>和 proc —样，也是基于内存的虚拟文件系统，用来管理内存存储目录 /sysfs</td>
+</tr>
+<tr>
+<td>tmpfs</td>
+<td>也是一种基于内存的虚拟文件系统，不过也可以使用 swap 交换分区</td>
+</tr>
+</tbody>
+</table>
+<h3 id="硬盘分区" tabindex="-1"><a class="header-anchor" href="#硬盘分区" aria-hidden="true">#</a> 硬盘分区</h3>
+<ol>
+<li><strong>硬盘分区的类型</strong></li>
+</ol>
+<p>不管是 Windows 系统还是 Linux 系统，可以识别的分区类型就是以下三种，如图15-10 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/disk_part.png" alt="disk_part" loading="lazy"></p>
+<p><strong>图15-10	<u>分区示意图1</u></strong></p>
+</div>
+<ul>
+<li>
+<p>主分区：最多只能分为4个。</p>
+</li>
+<li>
+<p>扩展分区：只能有一个，也算作主分区的一种，也就是说主分区加扩展分区最多有 4 个。但是扩展分区不能存储数据和进行格式化，必须再划分成逻辑分区才能使用。</p>
+</li>
+<li>
+<p>逻辑分区：逻辑分区是在扩展分区中划分的。如果是 IDE 硬盘，那么 Linux 最多支持 59 个逻辑分区；如果是 SCSI 硬盘，那么 Linux 最多支持 11 个逻辑分区。</p>
+</li>
+</ul>
+<h3 id="linux-中硬盘与分区的表示方式" tabindex="-1"><a class="header-anchor" href="#linux-中硬盘与分区的表示方式" aria-hidden="true">#</a> Linux 中硬盘与分区的表示方式</h3>
+<p>我们知道，在 Linux 系统中，所有内容都是以文件方式保存的。硬盘和分区也是一样的。我们使用“sd”代表 SCSI 或 SATA 硬盘，使用“hd”代表 IDE 硬盘。使用“1～4”代表主分区或者扩展分区，使用“5～59”代表逻辑分区。也就是说，如果按照上图所示的方式来分区，那么分区的设备文件名就如表15-3 所示。</p>
+<p><strong>表15-3	<u>分区的设备文件名1</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>分区</th>
+<th>设备文件名</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主分区 1</td>
+<td><code>/dev/sda1</code></td>
+</tr>
+<tr>
+<td>主分区 2</td>
+<td><code>/dev/sda2</code></td>
+</tr>
+<tr>
+<td>主分区 3</td>
+<td><code>/dev/sda3</code></td>
+</tr>
+<tr>
+<td>扩展分区</td>
+<td><code>/dev/sda4</code></td>
+</tr>
+<tr>
+<td>逻辑分区 1</td>
+<td><code>/dev/sda5</code></td>
+</tr>
+<tr>
+<td>逻辑分区 2</td>
+<td><code>/dev/sda6</code></td>
+</tr>
+<tr>
+<td>逻辑分区 3</td>
+<td><code>/dev/sda7</code></td>
+</tr>
+</tbody>
+</table>
+<p>如果采用图15-11 所示的方式来分区，那么分区的设备文件名就如表15-4 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/disk_part2.png" alt="disk_part2" loading="lazy"></p>
+<p><strong>图15-11	<u>分区示意图2</u></strong></p>
+</div>
+<p><strong>表15-4	<u>分区的设备文件名2</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>分区</th>
+<th>设备文件名</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主分区 1</td>
+<td><code>/dev/sda1</code></td>
+</tr>
+<tr>
+<td>扩展分区</td>
+<td><code>/dev/sda2</code></td>
+</tr>
+<tr>
+<td>逻辑分区 1</td>
+<td><code>/dev/sda5</code></td>
+</tr>
+<tr>
+<td>逻辑分区 2</td>
+<td><code>/dev/sda6</code></td>
+</tr>
+<tr>
+<td>逻辑分区 3</td>
+<td><code>/dev/sda7</code></td>
+</tr>
+</tbody>
+</table>
+<p>对于第二种分区方式，虽然主分区和扩展分区加起来只有两个，但是分区号 3 和分区号4 就算空着也不能被逻辑分区占用。也就是说，不管怎么分区，逻辑分区一定是从 <code>/dev/sda5</code>开始计算的。</p>
+<h2 id="文件系统常用命令" tabindex="-1"><a class="header-anchor" href="#文件系统常用命令" aria-hidden="true">#</a> 文件系统常用命令</h2>
+<p>我们先来学习一下文件系统相关的常用命令，只有知道了这些命令，才能有效地管理我们的文件系统。</p>
+<h3 id="文件系统查看命令-df" tabindex="-1"><a class="header-anchor" href="#文件系统查看命令-df" aria-hidden="true">#</a> 文件系统查看命令：df</h3>
+<p>通过 <code>df</code> 命令可以查看已经挂载的文件系统的信息，包括设备文件名、文件系统总大小、已经使用的大小、剩余大小、使用率和挂载点等。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># df [选项] [挂载点或分区设备文件名]</span>
+选项:
+	-a	：显示所有文件系统信息，包括特殊文件系统，如 /proc、/sysfs
+	-h	：使用习惯单位显示容量，如 KB、MB 或 GB 等
+	-T	：显示文件系统类型
+	-m	：以 MB 为单位显示容量
+	-k	：以 KB 为单位显示容量。默认以 KB 为单位
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>举几个例子。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 例子 1 ：显示系统内的文件系统信息</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># df</span>
+文件系统		1K-块		已用		可用		已用%	挂载点
+/dev/sda3	<span class="token number">28744836</span>	<span class="token number">2243516</span>	<span class="token number">25041148</span>	<span class="token number">9</span>%	/
+tmpfs		<span class="token number">515396</span>		<span class="token number">515396</span>	<span class="token number">0</span>			<span class="token number">0</span>%	/dev/shm
+<span class="token comment">#内存虚拟出来的磁盘空间</span>
+/dev/sdal	<span class="token number">198337</span>		<span class="token number">26333</span>	<span class="token number">161764</span>		<span class="token number">14</span>%	/boot
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>说明一下命令的输出结果。</p>
+<blockquote>
+<p>第一列：设备文件名。</p>
+<p>第二列：文件系统总大小，默认以 KB 为单位。</p>
+<p>第三列：已用空间大小。</p>
+<p>第四列：未用空间大小。</p>
+<p>第五列：空间使用百分比。</p>
+<p>第六列：文件系统的挂载点。</p>
+</blockquote>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 例子 2：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># df -ahT</span>
+<span class="token comment">#	-a：显示特珠文件系统，这些文件系统几乎都是保存在内存中的，如 /proc。因为是挂载在内存中的，所以占用量都是0</span>
+<span class="token comment">#	-h：单位不再只用 KB，而是換算成习惯单位</span>
+<span class="token comment">#	-T：多出了文件系统类型一列</span>
+文件系统			类型				容量		已用		可用		已用%	挂载点
+/dev/sda3	  ext4				28G  	<span class="token number">2</span>.2G	24G		<span class="token number">9</span>% 		/
+sysfs         sysfs         	<span class="token number">0</span>		<span class="token number">0</span>    	<span class="token number">0</span>     	- 		/sys
+proc          proc          	<span class="token number">0</span>   	<span class="token number">0</span>     	<span class="token number">0</span>     	- 		/proc
+devpts        devpts        	<span class="token number">0</span>		<span class="token number">0</span>       <span class="token number">0</span>    	- 		/dev/pts
+tmpfs         tmpfs         	394M  	<span class="token number">1</span>.5M  	393M    <span class="token number">1</span>% 		/run
+/dev/sda1     ext4          	194M   	26M   	158M   	<span class="token number">14</span>% 	/boot
+none          binfmt_misc		<span class="token number">0</span>   	<span class="token number">0</span>   	<span class="token number">0</span>      	- 		/proc/sys/fs/bintmt_misc
+sunrpe        rpe_pipersivar	<span class="token number">0</span>   	<span class="token number">0</span>   	<span class="token number">0</span>     	- 		/lib/nfs/rpe_pipefs
+/dev/sro      iso9660       	<span class="token number">3</span>.5G 	<span class="token number">3</span>.5G	<span class="token number">0</span>  		<span class="token number">100</span>% 	/mnt/cdrom
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><h3 id="统计目录或文件所占磁盘空间大小命令-du" tabindex="-1"><a class="header-anchor" href="#统计目录或文件所占磁盘空间大小命令-du" aria-hidden="true">#</a> 统计目录或文件所占磁盘空间大小命令：du</h3>
+<ol>
+<li><strong>du命令</strong></li>
+</ol>
+<p><code>du</code> 是统计目录或文件所占磁盘空间大小的命令，需要注意的是，使用 <code>ls -l</code> 命令是可以看到文件的大小的。但是大家会发现，在使用 <code>ls -l</code> 命令查看目录大小时，目录的大小多数是 4KB，这是因为目录下的子目录名和子文件名是保存到父目录的 block （默认大小为 4KB）中的，如果父目录下的子目录和子文件并不多，一个 block 就能放下，那么这个父目录就只占用了一个 block 大小。大家可以将其想象成图书馆的书籍目录和实际书籍。如果我们用 <code>ls -l</code> 命令查看，则只能看到这些书籍占用了 1 页纸的书籍目录，但是实际书籍到底有多少是看不到的，哪怕它堆满了几个房间。</p>
+<p>但是我们在统计目录时，不是想看父目录下的子目录名和子文件名到底占用了多少空间，而是想看父目录下的子目录和子文件的总磁盘占用量大小，这时就需要使用 <code>du</code> 命令才能统计目录的真正磁盘占用量大小。<code>du</code> 命令的格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># du [选项] [目录成文件名]</span>
+选项：
+	-a	：显示每个子文件的磁盘占用量。默认只统计子目录的磁盘占用量
+	-h	：使用习惯单位显示磁盘占用量，如 KB、MB 或 GB 等
+	-s	：统计息磁盘占用量，而不列出子目录和子文件的磁盘占用量
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p>举几个例子。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 例子 1：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># du</span>
+<span class="token comment">#统计统计当前目录的总磁盘占用量的大小，同时会统计当前目录下所有子目录的磁盘占用量大小，不统计子文件磁盘占用量大小，默认单位为 KB1</span>
+<span class="token number">20</span>		./.gnupg			<span class="token operator">&lt;</span>---统计每个子目录的大小
+<span class="token number">24</span>		./yum.bak
+<span class="token number">8</span>		./dtest
+<span class="token number">28</span>		./sh
+<span class="token number">188</span>		<span class="token builtin class-name">.</span>					<span class="token operator">&lt;</span>---统计当前目录的大小
+
+<span class="token comment"># 例子 2：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># du -a</span>
+<span class="token comment">#统计当前目录的总大小，同时会统计当前目录下所有子文件和子目录磁盘占用量的大小。默认单位为 KB</span>
+<span class="token number">4</span>		./.bash_logout
+<span class="token number">36</span>		./install.l0g
+<span class="token number">4</span>		./.bash_profile
+<span class="token number">4</span>		./.cshrc
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token number">188</span>		<span class="token builtin class-name">.</span>
+
+<span class="token comment"># 例子 3：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># du -sh</span>
+<span class="token comment">#只统计磁盘占用量总的大小，同时使用习惯单位显示</span>
+188K	<span class="token builtin class-name">.</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br></div></div><ol start="2">
+<li><strong>du 命令和 df 命令的区别</strong></li>
+</ol>
+<p>有时我们会发现，使用 <code>du</code> 命令和 <code>df</code> 命令去统计分区的使用情况时，得到的数据是不一样的。那是因为 <code>df</code> 命令是从文件系统的角度考虑的，通过文件系统中未分配的空间来确定文件系统中已经分配的空间大小。也就是说，在使用 <code>df</code> 命令统计分区时，不仅要考虑文件占用的空间，还要统计被命令或程序占用的空间（最常见的就是文件已经删除，但是程序并没有释放空间）。而 <code>du</code> 命令是面向文件的，只会计算文件或目录占用的磁盘空间。也就是说，<code>df</code> 命令统计的分区更准确，是真正的空闲空间。</p>
+<h3 id="挂载和卸载命令-mount-和-umount" tabindex="-1"><a class="header-anchor" href="#挂载和卸载命令-mount-和-umount" aria-hidden="true">#</a> 挂载和卸载命令：mount 和 umount</h3>
+<p>Linux 中所有的存储设备都必须在挂载之后才能使用，包括硬盘、U 盘和光盘（swap 分区是系统直接调用的，所以不需要挂载）。不过，硬盘分区在安装时就已经挂载了，而且会在每次系统启动时自动挂载，所以不需要手工参与。但是在 Linux 系统中要想使用光盘和 U 盘，就需要学一些挂载命令。</p>
+<p>我们还需要复习一下，挂载是指把硬盘分区（如分区 <code>/dev/sdb1</code>，其实指的是文件系统）和挂载点（已经建立的空目录）联系起来的过程。这里需要注意，挂载点必须是目录，而且原则上应该使用空目录作为挂载点。</p>
+<p>如果不使用空目录作为挂载点，而使用已经有数据的目录（如 <code>/etc/</code> 目录）作为挂载点，则会出现什么情况呢？很简单，原先 <code>/etc/</code> 目录下的数据就查找不到了，在 <code>/etc/</code> 目录中只能看到新的分区中的数据。这是因为 <code>/etc/</code> 目录原先并不是单独的分区，而是 <code>/</code> 分区的子目录，所以 <code>/etc/</code> 目录中的数据实际上保存在 <code>/</code> 分区的 block 中。但是现在给 <code>/etc/</code> 目录单独分区了，再向 <code>/etc/</code> 目录中保存数据，就会保存在 <code>/etc/</code> 目录的新分区的 blok 中，那么原始数据当然就不能看到了。如果还想访问原始数据，则只能把新分区卸载掉。</p>
+<ol>
+<li><strong>mount命令的基本格式</strong></li>
+</ol>
+<p>说了这么多，<code>mount</code> 命令的具体格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount [-l]</span>
+<span class="token comment">#查询系统中已经挂载的设备，-l 会显示卷标名称</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -a</span>
+<span class="token comment">#依据配置文件 /etc/fstab 的内容，自动挂载</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount [-t 文件系统] [-L 卷标名] [-o 特殊选项] 设备文件名 挂载点</span>
+选项：
+	-t 文件系统	：加入文件系统类型来指定挂载的类型，可以是 ext3、ext4、iso9660 等文件系统，具体可以参考---Linux 支持的常见文件系统的表
+	-L 卷标名	：挂载指定卷标的分区，而不是安装设备文件名挂载
+	-o 特殊选项	：可以指定挂载的额外选项，比如读写权限、同步/异步等，如果不指定,则默认值生效。具体的特殊选项参见表15-5
+	
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p><strong>表15-5	<u>mount 命令挂载特殊选项</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>atime/noatime</td>
+<td>更新访问时间/不更新访问时间。在访问分区文件时，是否更新文件的访问时间，默认为更新</td>
+</tr>
+<tr>
+<td>async/sync</td>
+<td>异步/同步，默认为异步</td>
+</tr>
+<tr>
+<td>auto/noauto</td>
+<td>自动/手动。如 <code>mount -a</code> 命令执行时，是否会自动安装 <code>/etc/fstab</code> 文件内容挂载，默认为自动</td>
+</tr>
+<tr>
+<td>default</td>
+<td>定义默认值，相当于 rw、suid、dev、exec、auto，nouser、async 这 7个选项</td>
+</tr>
+<tr>
+<td>exec/noexec</td>
+<td>执行/不执行。设定是否允许在文件系统中执行可执行文件，默认是允许</td>
+</tr>
+<tr>
+<td>remount</td>
+<td>重新挂载已经挂载的文件系统，一般用于指定修改特殊权限</td>
+</tr>
+<tr>
+<td>rw/ro</td>
+<td>读写/只读。文件系统挂载时，是否拥有读写权限，默认是rw</td>
+</tr>
+<tr>
+<td>suid/nosuid</td>
+<td>具有/不具有 SetUID 权限。设定文件系统是否拥有 SetUID 和 SetGID 权限，默认是拥有</td>
+</tr>
+<tr>
+<td>user/nouser</td>
+<td>允许/不允许普通用户挂载。设定文件系统是否允许普通用户挂载，默认是不允许，只有 root 可以挂载分区</td>
+</tr>
+<tr>
+<td>usrquota</td>
+<td>代表文件系统支持用户磁盘配额，默认不支持</td>
+</tr>
+<tr>
+<td>grpquota</td>
+<td>代表文件系统支持组磁盘配额，默认不支持</td>
+</tr>
+</tbody>
+</table>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 例子 1：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount</span>
+<span class="token comment">#查看系统中已经挂载的文件系统，注意有虚拟文件系统</span>
+/dev/sda3 on / <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw,relatime,errors<span class="token operator">=</span>remount-ro<span class="token punctuation">)</span>
+sysfs on /sys <span class="token builtin class-name">type</span> sysfs <span class="token punctuation">(</span>rw,nosuid,nodev,noexec,relatime,seclabel<span class="token punctuation">)</span>
+proc on /proc <span class="token builtin class-name">type</span> proc <span class="token punctuation">(</span>rw,nosuid,nodev,noexec,relatime<span class="token punctuation">)</span>
+devtmpfs on /dev <span class="token builtin class-name">type</span> devtmpfs <span class="token punctuation">(</span>rw,nosuid,seclabel,size<span class="token operator">=</span>495400k,nr_inodes<span class="token operator">=</span><span class="token number">123850</span>,mode<span class="token operator">=</span><span class="token number">755</span><span class="token punctuation">)</span>
+tmpfs on /dev/shm <span class="token builtin class-name">type</span> tmpfs <span class="token punctuation">(</span>rw,nosuid,nodev,seclabel<span class="token punctuation">)</span>
+/dev/sda1 on /boot <span class="token builtin class-name">type</span> xfs <span class="token punctuation">(</span>rw,relatime,seclabel,attr2,inode64,noquota<span class="token punctuation">)</span>
+<span class="token comment">#命令结果表示：将 /dev/sda3 分区挂载到 / 目录，文件系统是 etx4，权限是读写 rw</span>
+
+<span class="token comment"># 例子 2：修改特殊权限</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount</span>
+<span class="token comment">#我们查看到 /boot 分区已经被挂载了，而且采用的是 defaults 选项，那么我们重新挂载分区，并采用 noexec 权限禁止执行文件执行，看看会出现什么情况（注意不要用 / 分区做实验，否则系统命令也就不能执行了</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+/dev/sdal on /boot <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -o remount,noexec /boot</span>
+<span class="token comment">#重新挂载 /boot 分区，并使用 noexec 权限</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /boot/</span>
+<span class="token punctuation">[</span>root@localhost boot<span class="token punctuation">]</span><span class="token comment"># vi hello.sh</span>
+<span class="token comment">#写一个 Shell 吧</span>
+<span class="token comment">#!/bin/bash </span>
+<span class="token builtin class-name">echo</span> <span class="token string">"hello!!"</span>
+<span class="token punctuation">[</span>root@localhost boot<span class="token punctuation">]</span><span class="token comment"># chmod 755 hello.sh</span>
+<span class="token punctuation">[</span>root@localhost boot<span class="token punctuation">]</span><span class="token comment"># ./hello.sh</span>
+-bash: ./hello.sh: 权限不够
+<span class="token comment">#虽然赋予了 hello.sh 执行权限，但是仍然无法执行</span>
+<span class="token punctuation">[</span>root@localhost boot<span class="token punctuation">]</span><span class="token comment"># mount -o remount,exec /boot</span>
+<span class="token comment">#记得改回来，否则会影响系统启动</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br></div></div><p>如果我们做实验修改了特殊选项，那一定要记住，而且确定需要修改；否则非常容易出现系统问题，而且还找不到问题的根源。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token comment"># 例子 3：挂载分区</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /mnt/diskl</span>
+<span class="token comment">#建立挂载点目录</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/sdbl /mnt/disk1</span>
+<span class="token comment">#挂载分区</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p><code>/dev/sdb1</code> 分区还没有被划分。我们在这里只看看挂载分区的方式，非常简单，甚至不需要使用“-text4”命令指定文件系统，因为系统是可以自动检测的。</p>
+<ol start="2">
+<li><strong>挂载光盘</strong></li>
+</ol>
+<p>在 Windows 中如果想要使用光盘，则只需把光盘放入光驱，单击使用即可。但是在 Linux 中除了要把光盘放入光驱，而且必须在挂载之后才能正确使用。还要记得用完光盘后也不能像 Windows 一样，直接弹出光驱取出光盘，而必须先卸载才能取出光盘（确实不如 Windows 方便，不过这也只是一个操作习惯，习惯了就好）。挂载命令如下（当然要记得在 Linux 中放入光盘)：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /mnt/cdrom/</span>
+<span class="token comment">#建立挂截点</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -t iso9660 /dev/cdrom /mnt/cdrom/</span>
+<span class="token comment">#挂载光盘</span>
+
+<span class="token comment">#光盘的文件系统是 iso9660，不过这个文件系统可以省略不写，系统会自动检测，命令如下：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/cdrom /mnt/cdrom/</span>
+<span class="token comment">#挂载光盘。两个挂载光盘的命令使用一个就可以了</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount</span>
+<span class="token comment">#查看已经挂载的设备</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+/dev/sr0 on /mnt/cdrom <span class="token builtin class-name">type</span> iso9660 <span class="token punctuation">(</span>ro<span class="token punctuation">)</span>
+<span class="token comment">#光盘已经挂载了，但是挂载的设备文件名是 /dev/sr0</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br></div></div><p>我们已经知道挂载就是把光驱的设备文件和挂载点连接起来。挂载点 <code>/mn/cdrom</code> 是我们手工建立的空目录，我个人习惯把挂载点建立在 <code>/mnt</code> 目录中，因为我们在学习 Linux 的时候是没有 <code>/media/</code> 目录的，大家要是愿意也可以建立 <code>/media/cdrom</code> 作为挂载点，只要是已经建立的空目录都可以作为挂载点。那么 <code>/dev/cdrom</code> 就是光驱的设备文件名，不过注意 <code>/dev/cdrom</code> 只是一个软链接。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># ll /dev/cdrom </span>
+lrwxrwxrwx <span class="token number">1</span> root root <span class="token number">3</span> <span class="token number">1</span>月 <span class="token number">31</span> 01:13 /dev/cdrom -<span class="token operator">></span> sro
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><p><code>/dev/cdrom</code> 的源文件是 <code>/dev/sr0</code>。<code>/dev/sr0</code> 是光驱的真正设备文件名，代表 SCSI 接口或 SATA接口的光驱，所以刚刚查询挂载时看到的光驱设备文件命令是 <code>/dev/sr0</code>。也就是说，挂载命令也可以写成这样：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/sr0 /mnt/cdrom/</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>其实光驱的真正设备文件名是保存在 <code>/proc/sys/dev/cdrom/info</code> 文件中的，所以可以通过查看这个文件来查询光盘的真正设备文件名，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cat /proc/sys/dev/cdrom/info</span>
+CD-ROM information, Id: cdrom.c <span class="token number">3.20</span> <span class="token number">2003</span>/12/17
+drive name:				sr0
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><ol start="3">
+<li><strong>挂载 U 盘</strong></li>
+</ol>
+<p>其实挂载 U 盘和挂载光盘的方式是一样的，只不过光盘的设备文件名是固定的（<code>/dev/sr0</code> 或 <code>/dev/cdrom</code>），而 U 盘的设备文件名是在插入U盘后系统自动分配的。因为 U 盘使用的是硬盘的设备文件名，而每台服务器上插入的硬盘数量和分区方式都是不一样的，所以 U 盘的设备号需要单独检测与分配，以免和硬盘的设备文件名产生冲突。U 盘的设备文件名是系统自动分配的，我们只要查找出来然后挂载就可以了。</p>
+<p>首先把 U 盘插入 Linux 系统中（注意：如果是虚拟机，则需要先把鼠标点入虚拟机再插入 U 盘)，然后就可以使用 <code>fdisk</code> 命令查看 U 盘的设备文件名了。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk -l</span>
+
+Disk /dev/sda: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytes
+<span class="token comment">#系统硬盘</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+Disk /dev/sdb： <span class="token number">8022</span> MB, <span class="token number">8022654976</span> bytes
+<span class="token comment">#这就是识别的口盘，大小为 8GB</span>
+<span class="token number">94</span> heads, <span class="token number">14</span> sectors/track, <span class="token number">11906</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">1316</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">673792</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+Disk identifier: Ox00000000
+Device Boot		start		End		Bloks		Id		System
+/dev/sab1		<span class="token number">1</span>			<span class="token number">11907</span>	<span class="token number">7834608</span>		b		W95 FAT32
+<span class="token comment">#系统给 U盘分配的设备文件名</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br></div></div><p>查看到 U 盘的设备文件名，接下来就要创建挂载点了。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /mnt/usb</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>然后就是挂载了，挂载命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -t vfat /dev/sdbl /mnt/usb/</span>
+<span class="token comment">#挂载U盘。因为是 Windows 分区，所以是 vfat 文件系统格式</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /mnt/usb/</span>
+<span class="token comment">#去挂载点访问 U盘数据</span>
+<span class="token punctuation">[</span>root@localhost usb<span class="token punctuation">]</span><span class="token comment"># ls </span>
+??		?????	????<span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">)</span>.xls			DSC_5843.jpg		??VCR<span class="token punctuation">(</span>?<span class="token punctuation">)</span>.mp4
+??		<span class="token number">1111111</span>????????.xls		???????.BD??1280??????.rmvb		J02		????.wps
+<span class="token comment">#之所以出现乱码，是因为编码格式不同</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>之所以出现乱码，是因为 U 盘是 Windows 中保存的数据，而 Windows 中的中文编码格式和 Linux 中的不一致，只需在挂载的时候指定正确的编码格式就可以解决乱码问题，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -t vfat -o iocharset=utf8 /dev/sdbl /mnt/usb/</span>
+<span class="token comment">#挂载 U盘。指定中文编码格式为 UTF-8</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /mnt/usb/</span>
+<span class="token punctuation">[</span>root@localhost usb<span class="token punctuation">]</span><span class="token comment"># ls</span>
+<span class="token number">1111111</span>		年度总结及计划表.xls	ZsyquMLToskarnodahsur6.mp4		协议书
+<span class="token number">12</span>月21日.doc		恭喜发财（定）.mp4		新年VCR（定）.mp4
+<span class="token comment">#可以正确地查看中文了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div><p>因为我们的 Linux 在安装时采用的是 UTTF-8 编码格式，所以要让 U 盘在挂载时也指定为 UTF-8 编码格式，才能正确显示。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># echo $LANG</span>
+zh_CN.UTF-8
+<span class="token comment">#查看一下 Linux 默认的编码格式</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>Linux 默认是不支持 NTFS 文件系统的，所以默认是不能挂载 NTFS 格式的移动硬盘的。</p>
+<p>要想让 Linux 支持移动硬盘，主要有三种方法：</p>
+<ul>
+<li>一是重断编译内核，加入 ntfs 模块，然后安装 ntfs 模块即可；</li>
+<li>二是不自己编译内核，而是下载已经编译好的内核，直接安装即可；</li>
+<li>三是安装 NTFS 文件系统的第三方插件，也可以支持 NTFS 文件系统。</li>
+</ul>
+</div>
+<ol start="4">
+<li><strong>卸载命令</strong></li>
+</ol>
+<p>光盘和 U 盘使用完成后，在取出之前都要卸载。不过，硬盘分区是否需要卸载取决于你下次是否还需要使用，一般硬盘分区不用卸载。卸载命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># umount 设备文件名或挂载点</span>
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># umount /mnt/usb</span>
+<span class="token comment">#卸载 U盘</span>
+<span class="token punctuation">[</span>root@localnost ~<span class="token punctuation">]</span><span class="token comment"># umount /mnt/cdrom</span>
+<span class="token comment">#卸载光盘</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># umount /dev/sr0</span>
+<span class="token comment">#命令加设备文件名同样是可以卸载的</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>卸载命令后面既可以加设备文件名也可以加挂载点，不过只能加一个，如果加了两个，如 <code>umount /dev/sr0 /mnt/cdrom</code>，就会对光驱卸载两次，当然卸载第二次的时候就会报错。另外，我们在卸载时有可能会出现以下情况：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/sr0 /mnt/cdrom/</span>
+<span class="token comment">#挂载光盘</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># cd /mnt/cdrom/</span>
+<span class="token comment">#进入光盘挂载点</span>
+<span class="token punctuation">[</span>root@localhost cdrom<span class="token punctuation">]</span><span class="token comment"># umount /mnt/cdrom</span>
+umount: /mnt/cdrom: device is busy.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><p>这种报错是因为我们已经进入了挂载点，这时如果要卸载，那么登录用户应该放在什么位置呢？所以卸载时必须退出挂载目录。这也很好理解，如果我们踩着梯子爬到了三楼这么高，这时给你一把锯，请你把二楼的梯子锯断，那么我估计谁都不愿意，因为如果锯断了二楼，那么已经爬到三楼的用户怎么下来呢？所以要记得在退出挂载目录之后再进行卸载。</p>
+<h3 id="文件系统检测与修复命令-fsck" tabindex="-1"><a class="header-anchor" href="#文件系统检测与修复命令-fsck" aria-hidden="true">#</a> 文件系统检测与修复命令： fsck</h3>
+<p>计算机系统难免会因为人为的误操作或系统的原因而出现死机或突然断电的情况，这种情况下非常容易造成文件系统的崩溃，严重时甚至会造成硬件损坏。这也是我们一直在强调的服务器一定要先关闭服务再进行重启的原因所在。</p>
+<p>如果真出现了文件系统损坏的情况，难道就没有修复的办法吗？我们现在要讲的 <code>fsck</code> 命令就是用来进行文件系统检测与修复的，命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fsck [选项] 分区设备文件名</span>
+选项：
+	-t 文件系统	：指定分区的文件系统
+	-A			：按照配置文件 /etc/fstab 检查所有分区
+	-a			：不用显示用户提示，自动修复文件系统
+	-C			：显示检查分区的进度条
+	-f			：强制检测。一般 <span class="token function">fsck</span> 命令如果没有发现分区有问题，则是不会检测的。如果强制检测，那么不管是否发现问题，都会检测
+	-y			：自动修复。和 -a 作用一致，不过有些文件系统只支持 -y
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br></div></div><p>如果想要修复某个分区，则只需执行如下命令：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fsck -y /dev/sdb1</span>
+<span class="token comment">#自动修复</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br></div></div><h3 id="显示磁盘状态命令-dumpe2fs" tabindex="-1"><a class="header-anchor" href="#显示磁盘状态命令-dumpe2fs" aria-hidden="true">#</a> 显示磁盘状态命令：dumpe2fs</h3>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># dumpe2fs /dev/sda1</span>
+dumpe2fs <span class="token number">1.44</span>.1 <span class="token punctuation">(</span><span class="token number">24</span>-Mar-2018<span class="token punctuation">)</span>
+Filesystem volume name:   <span class="token operator">&lt;</span>none<span class="token operator">></span>									<span class="token operator">&lt;</span>---卷标名
+Last mounted on:          /										<span class="token operator">&lt;</span>---挂载点
+Filesystem UUID:          0a5e044f-60e0-4e15-af8f-c6c5882f3425		<span class="token operator">&lt;</span>---UUID
+Filesystem magic number:  0xEF53
+Filesystem revision <span class="token comment">#:    1 (dynamic)</span>
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum
+Filesystem flags:         signed_directory_hash 
+Default <span class="token function">mount</span> options:    user_xattr acl							<span class="token operator">&lt;</span>---挂载参数
+Filesystem state:         clean									<span class="token operator">&lt;</span>---文件系统状态，正常
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              <span class="token number">2621440</span>									<span class="token operator">&lt;</span>---inode 总数
+Block count:              <span class="token number">10485248</span>									<span class="token operator">&lt;</span>---块总数
+Reserved block count:     <span class="token number">524262</span>
+Free blocks:              <span class="token number">6357559</span>
+Free inodes:              <span class="token number">1946492</span>
+First block:              <span class="token number">0</span>
+Block size:               <span class="token number">4096</span>										<span class="token operator">&lt;</span>---块大小
+Fragment size:            <span class="token number">4096</span>
+Group descriptor size:    <span class="token number">64</span>
+Reserved GDT blocks:      <span class="token number">1024</span>
+Blocks per group:         <span class="token number">32768</span>
+Fragments per group:      <span class="token number">32768</span>
+Inodes per group:         <span class="token number">8192</span>
+Inode blocks per group:   <span class="token number">512</span>
+Flex block group size:    <span class="token number">16</span>
+Filesystem created:       Fri Apr <span class="token number">23</span> <span class="token number">16</span>:13:19 <span class="token number">2021</span>
+Last <span class="token function">mount</span> time:          Mon May <span class="token number">24</span> <span class="token number">13</span>:48:59 <span class="token number">2021</span>
+Last <span class="token function">write</span> time:          Mon May <span class="token number">24</span> <span class="token number">13</span>:48:58 <span class="token number">2021</span>
+Mount count:              <span class="token number">12</span>
+Maximum <span class="token function">mount</span> count:      -1
+Last checked:             Fri Apr <span class="token number">23</span> <span class="token number">16</span>:13:19 <span class="token number">2021</span>
+Check interval:           <span class="token number">0</span> <span class="token punctuation">(</span><span class="token operator">&lt;</span>none<span class="token operator">></span><span class="token punctuation">)</span>
+Lifetime writes:          <span class="token number">61</span> GB
+Reserved blocks uid:      <span class="token number">0</span> <span class="token punctuation">(</span>user root<span class="token punctuation">)</span>
+Reserved blocks gid:      <span class="token number">0</span> <span class="token punctuation">(</span>group root<span class="token punctuation">)</span>
+First inode:              <span class="token number">11</span>
+Inode size:	          	  <span class="token number">256</span>										<span class="token operator">&lt;</span>---inode 的大小
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+
+组 <span class="token number">0</span>：<span class="token punctuation">(</span>块 <span class="token number">0</span>-32767<span class="token punctuation">)</span> 校验值 0x2929 <span class="token punctuation">[</span>ITABLE_ZEROED<span class="token punctuation">]</span>					<span class="token operator">&lt;</span>---第一个数据组的内容
+  主 超级块位于 <span class="token number">0</span>，组描述符位于 <span class="token number">1</span>-5
+  保留的GDT块位于 <span class="token number">6</span>-1029
+  块位图位于 <span class="token number">1030</span> <span class="token punctuation">(</span>+1030<span class="token punctuation">)</span>，校验值 0x30f35b5a
+  Inode 位图位于 <span class="token number">1046</span> <span class="token punctuation">(</span>+1046<span class="token punctuation">)</span>，校验值 0x6b19aa45
+  Inode表位于 <span class="token number">1062</span>-1573 <span class="token punctuation">(</span>+1062<span class="token punctuation">)</span>
+  <span class="token number">19414</span> 个可用 块，8176 个可用inode，2 个目录 ，8175个未使用的inodes
+  可用块数： <span class="token number">13354</span>-32767
+  可用inode数： <span class="token number">15</span>, <span class="token number">18</span>-8192
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br><span class="line-number">48</span><br><span class="line-number">49</span><br><span class="line-number">50</span><br><span class="line-number">51</span><br><span class="line-number">52</span><br></div></div><p>可以看到，使用 <code>dumpe2fs</code> 命令可以查询到非常多的信息，以上信息大致可分为 2 部分。</p>
+<ul>
+<li>
+<p>前半部分显示的是超级块的信息，包括文件系统名称、已使用以及未使用的 inode 和 block 的数量、每个 block 和 inode 的大小，文件系统的挂载时间等。</p>
+</li>
+<li>
+<p>另外，Linux 文件系统（EXT 系列）在格式化的时候，会分为多个区块群组（block group），每 个区块群组都有独立的 inode/block/superblock 系统。此命令输出结果的后半部分，就是每个区块群组的详细信息（如 Group0、Group1）。</p>
+</li>
+</ul>
+<h2 id="硬盘分区命令-fdisk" tabindex="-1"><a class="header-anchor" href="#硬盘分区命令-fdisk" aria-hidden="true">#</a> 硬盘分区命令：fdisk</h2>
+<p>我们在安装操作系统的过程中已经对系统硬盘进行了分区，但如果新添加了一块硬盘，想要正常使用，难道需要重新安装操作系统才可以分区吗？</p>
+<p>当然不是，在 Linux 中有专门的分区命令 <code>fdisk</code> 和 <code>parted</code>。其中 <code>fdisk</code> 命令较为常用，但不支持大于 2TB 的分区；如果需要支持大于 2TB 的分区，则需要使用 <code>parted</code> 命令，当然 <code>parted</code> 命令也能分配较小的分区。我们先来看看如何使用 <code>fdisk</code> 命令进行分区。</p>
+<h3 id="命令格式" tabindex="-1"><a class="header-anchor" href="#命令格式" aria-hidden="true">#</a> 命令格式</h3>
+<p>fdisk 命令的格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk ~l</span>
+<span class="token comment">#列出系统分区</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk 设备文件名</span>
+<span class="token comment">#给硬盘分区</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>注意，千万不要在当前的硬盘上尝试使用 <code>fdisk</code>，这会完整删除整个系统，一定要再找一块硬盘，或者使用虚拟机。</p>
+<ol>
+<li><strong>查看所有分区信息</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk -l</span>
+<span class="token comment">#查询本机可以识别的硬盘和分区</span>
+Disk /dev/sda:32.2 GB, <span class="token number">32212254720</span> bytes
+<span class="token comment">#硬盘文件名和硬盘大小</span>
+<span class="token number">255</span> heads, <span class="token number">63</span> sectors/track, <span class="token number">3916</span> cylinders
+<span class="token comment">#共255个磁头、63个扇区和3916个柱面</span>
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> *512 <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+<span class="token comment">#每个柱面的大小</span>
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes/512 bytes
+<span class="token comment">#每个扇区的大小</span>
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes/512 bytes
+Disk identifier: 0x0009e098
+
+Device Boot Start End Blocks ld System
+/dev/sda1 * <span class="token number">1</span> <span class="token number">26</span> <span class="token number">204800</span> <span class="token number">83</span> Linux
+Partition <span class="token number">1</span> does not end on cylinder boundary.
+<span class="token comment">#分区1没有占满硬盘</span>
+/dev/sda2 <span class="token number">26</span> <span class="token number">281</span> <span class="token number">2048000</span> <span class="token number">82</span> Linux swap / Solaris
+Partition <span class="token number">2</span> does not end on cylinder boundary
+<span class="token comment">#分区2没有占满硬盘</span>
+/dev/sda3 <span class="token number">281</span> <span class="token number">3917</span> <span class="token number">29203456</span> <span class="token number">83</span> Linux
+<span class="token comment">#设备文件名启动分区 起始柱面 终止柱面容量 ID 系统</span>
+
+Disk /dev/sdb: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytes 
+<span class="token comment">#第二个硬盘识别，这个硬盘的大小</span>
+<span class="token number">255</span> heads, <span class="token number">63</span> sectors/track, <span class="token number">2610</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes/512 bytes
+Disk identifier: 0x00000000
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br></div></div><p>使用 <code>fdisk -l</code> 查看分区信息，能够看到我们添加的两块硬盘（<code>/dev/sda</code> 和 <code>/dev/sdb</code>）的信息。我们解释一下这些信息，其上半部分态是硬盘的整体状态，<code>/dev/sda</code> 硬盘的总大小是 32.2 GB，共有 3916 个柱面，每个柱面由 255 个磁头读/写数据，每个磁头管理 63 个扇区。每个柱面的大小是 8225280 Bytes，每个扇区的大小是 512 Bytes。</p>
+<p>信息的下半部分是分区的信息，共 7 列，含义如下：</p>
+<ul>
+<li>
+<p>Device：分区的设备文件名。</p>
+</li>
+<li>
+<p>Boot：是否为启动引导分区，在这里 <code>/dev/sda1</code> 为启动引导分区。</p>
+</li>
+<li>
+<p>Start：起始柱面，代表分区从哪里开始。</p>
+</li>
+<li>
+<p>End：终止柱面，代表分区到哪里结束。</p>
+</li>
+<li>
+<p>Blocks：分区的大小，单位是 KB。</p>
+</li>
+<li>
+<p>id：分区内文件系统的 ID。在 <code>fdisk</code> 命令中，可以 使用 &quot;i&quot; 查看。</p>
+</li>
+<li>
+<p>System：分区内安装的系统是什么。</p>
+</li>
+</ul>
+<p>如果这个分区并没有占满整块硬盘，就会提示 &quot;Partition 1 does not end on cyl inder boundary&quot;，表示第一个分区没有到硬盘的结束柱面。大家发现了吗？<code>/dev/sda</code> 已经分配完了分区，没有空闲空间了。而第二块硬盘 <code>/dev/sdb</code> 已经可以被识别了，但是没有可分区。</p>
+<ol start="2">
+<li><strong>fdisk 交互命令</strong></li>
+</ol>
+<p>我们以硬盘 <code>/dev/sdb</code> 为例来做练习，命令如下:</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk /dev/sdb</span>
+<span class="token comment">#给 /dev/sdb 分区</span>
+Device contains neither a valid DOS partition table, nor Sun, SGI or OSF disklabel
+Building a new DOS disklabel with disk identifier 0xed7e8bc7.
+Changes will remain <span class="token keyword">in</span> memory only, <span class="token keyword">until</span> you decide to <span class="token function">write</span> them.
+After that, of course, the previous content won<span class="token string">'t be recoverable.
+Warning: invalid flag 0x0000 of partition table 4 will be corrected by w(rite)
+WARNING: DOS-compatible mode is deprecated.it'</span>s strongly recommended to switch off the mode <span class="token punctuation">(</span>command <span class="token string">'c'</span><span class="token punctuation">)</span> and change display <span class="token function">units</span> to sectors <span class="token punctuation">(</span>command <span class="token string">'u'</span><span class="token punctuation">)</span>.
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>:m
+<span class="token comment">#交互界面的等待输入指令的位置，输入 m 得到帮助</span>
+Command action
+<span class="token comment">#可用指令</span>
+a toggle a bootable flag
+b edit bsd disklabel
+c toggle the dos compatibility flag
+d delete a partition
+I list known partition types m print this menu
+n <span class="token function">add</span> a new partition
+o create a new empty DOS partition table
+p print the partition table
+q quit without saving changes
+s create a new empty Sun disklabel
+t change a partition's system <span class="token function">id</span>
+u change display/entry <span class="token function">units</span>
+<span class="token function">v</span> verity the partition table
+w <span class="token function">write</span> table to disk and <span class="token builtin class-name">exit</span>
+x extra functionality <span class="token punctuation">(</span>experts only<span class="token punctuation">)</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br></div></div><p>注意这里的分区命令是 <code>fdisk /dev/sdb</code>，这是因为硬盘并没有分区，使用 <code>fdisk</code> 命令的目的就是建立分区。</p>
+<p>在 fdisk 交互界面中输入 m 可以得到帮助，帮助里列出了 fdisk 可以识别的交互命令，我们来解释一下这些命令，如表15-6 所示。</p>
+<p><strong>表15-6	<u>fdisk 交互命令</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说 明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td>设置可引导标记</td>
+</tr>
+<tr>
+<td>b</td>
+<td>编辑 bsd 磁盘标签</td>
+</tr>
+<tr>
+<td>c</td>
+<td>设置 DOS 操作系统兼容标记</td>
+</tr>
+<tr>
+<td>d</td>
+<td>删除一个分区</td>
+</tr>
+<tr>
+<td>1</td>
+<td>显示已知的文件系统类型。82 为 Linux swap 分区，83 为 Linux 分区</td>
+</tr>
+<tr>
+<td>m</td>
+<td>显示帮助菜单</td>
+</tr>
+<tr>
+<td>n</td>
+<td>新建分区</td>
+</tr>
+<tr>
+<td>0</td>
+<td>建立空白 DOS 分区表</td>
+</tr>
+<tr>
+<td>P</td>
+<td>显示分区列表</td>
+</tr>
+<tr>
+<td>q</td>
+<td>不保存退出</td>
+</tr>
+<tr>
+<td>s</td>
+<td>新建空白 SUN 磁盘标签</td>
+</tr>
+<tr>
+<td>t</td>
+<td>改变一个分区的系统 ID</td>
+</tr>
+<tr>
+<td>u</td>
+<td>改变显示记录单位</td>
+</tr>
+<tr>
+<td>V</td>
+<td>验证分区表</td>
+</tr>
+<tr>
+<td>w</td>
+<td>保存退出</td>
+</tr>
+<tr>
+<td>X</td>
+<td>附加功能（仅专家）</td>
+</tr>
+</tbody>
+</table>
+<ol start="3">
+<li><strong>新建主分区</strong></li>
+</ol>
+<p>下面我们实际建立一个主分区，看看过程是什么样子的。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk /dev/sdb</span>
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span><span class="token punctuation">..</span>
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: P					<span class="token operator">&lt;</span>---显示当前硬盘的分区列表
+Disk /dev/sdb: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytes
+<span class="token number">255</span> heads, <span class="token number">63</span> sectors/track, <span class="token number">2610</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>:512 bytes / <span class="token number">512</span> bytes
+Disk identifier： Oxb4b0720c
+
+Device Boot		start		End		Blocks		Id		iSystem4
+<span class="token comment">#目前一个分区都没有</span>
+
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: n					<span class="token operator">&lt;</span>---那么我们新建一个分区
+Command action							<span class="token operator">&lt;</span>---指定分区类型
+	e	extended						<span class="token operator">&lt;</span>---扩展分区
+    p	primary partition <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>			<span class="token operator">&lt;</span>---主分区
+p										<span class="token operator">&lt;</span>---这里选择 p，建立一个主分区
+Partition number <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>: <span class="token number">1</span>				<span class="token operator">&lt;</span>---选择分区号，范围为1～4。这里选择 <span class="token number">1</span>
+First cylinder <span class="token punctuation">(</span><span class="token number">1</span>-2610, default <span class="token number">1</span><span class="token punctuation">)</span>:	<span class="token operator">&lt;</span>---分区的起始柱面，默认从 <span class="token number">1</span> 开始。因为要从硬盘头开始分区，所以直接回车了
+Using default value <span class="token number">1</span>					<span class="token operator">&lt;</span>---提示使用的是默认值 <span class="token number">1</span>
+Last cylinder,+cylinders or +size<span class="token punctuation">{</span>K,M,G<span class="token punctuation">}</span><span class="token punctuation">(</span><span class="token number">1</span>-2610, default <span class="token number">2610</span><span class="token punctuation">)</span>：+5G
+<span class="token comment">#指定硬盘大小。可以按照柱面指定（1～2610）我们对柱面不熟悉，那么可以使用 +size(K,M,G)的方式指定硬盘大小。这里指定 +5G，建立一个 5GB 大小的分区</span>
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>:
+<span class="token comment">#主分区就建立了，又回到了 fdisk 交互界面的提示符</span>
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>:p					<span class="token operator">&lt;</span>---查询一下新建立的分区
+Disk /dev/sdb: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytes
+<span class="token number">255</span> heads,63 sectors/track, <span class="token number">2610</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span>/<span class="token operator">=</span> <span class="token number">8225280</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>:512 bytes / <span class="token number">512</span> bytes
+Disk identifier: Oxb4b0720c
+Device Boot
+
+Device Boot		start		End		Blocks		Id		System
+/dev/sdb1			<span class="token number">1</span>		<span class="token number">654</span>		<span class="token number">5253223</span>+ 	<span class="token number">83</span> 		Linux
+<span class="token comment"># /dev/sdb1 已经建立了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br></div></div><p>建立主分区的过程就是这样的，总结一下就是 <code>fdisk 硬盘名 → n（新建）→ p（建立主分区）→ 1（指定分区号）→ 回车（默认从 1 柱面开始建立分区）→ +5G（指定分区大小)</code>。当然，我们的分区还没有格式化和挂载，所以还不能使用。</p>
+<ol start="3">
+<li><strong>新建扩展分区</strong></li>
+</ol>
+<p>这次我们建立一个扩展分区。还记得吗？主分区和扩展分区加起来最多只能建立4个，而扩展分区最多只能建立1 个。扩展分区的建立命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code>Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span><span class="token punctuation">;</span> n					<span class="token operator">&lt;</span>---新建立分区
+<span class="token builtin class-name">command</span> action
+	e	extended
+	p	primary partition <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>
+e										<span class="token operator">&lt;</span>---这次建立扩展分区
+Partition number <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>: <span class="token number">2</span>				<span class="token operator">&lt;</span>---给扩展分区指定分区号 <span class="token number">2</span>
+First cylinder <span class="token punctuation">(</span><span class="token number">655</span>-2610, default <span class="token number">655</span><span class="token punctuation">)</span>:
+<span class="token comment">#扩展分区的起始柱面。刚刚建立的主分区1 已经占用了1～654个柱面，所以我们从 655 开始建立</span>
+<span class="token comment">#注意：如果没有特殊要求，则不要跳开柱面建立分区，应该紧挨着建立分区</span>
+using default value <span class="token number">655</span>					<span class="token operator">&lt;</span>---提示使用的是默认值 <span class="token number">655</span>
+Last cylinder, +cylinders or +sizelK,M,G<span class="token punctuation">}</span><span class="token punctuation">(</span><span class="token number">655</span>-2610, default <span class="token number">2610</span><span class="token punctuation">)</span>:
+<span class="token comment">#这里把整块硬盘的剩余空间都建立为扩展分区</span>
+Using default value <span class="token number">2610</span>
+<span class="token comment">#提示使用的是默认值 2610</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br></div></div><p>这里把 <code>/dev/sdb</code> 硬盘的所有剩余空间都建立为扩展分区，就是建立一个主分区，剩余空间都建立成扩展分区，再在扩展分区中建立逻辑分区。</p>
+<ol start="4">
+<li><strong>新建逻辑分区</strong></li>
+</ol>
+<p>扩展分区是不能被格式化和直接使用的，所以还要在扩展分区内部再建立逻辑分区。我们来看看逻辑分区的建立过程，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token builtin class-name">command</span> <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>： n				<span class="token operator">&lt;</span>---建立新分区
+Command action
+	l	logical <span class="token punctuation">(</span><span class="token number">5</span> or over<span class="token punctuation">)</span>				<span class="token operator">&lt;</span>---因为扩展分区已经建立，所以这里变成了 l（logic）
+	p	primary partition <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>
+l										<span class="token operator">&lt;</span>---建立逻辑分区
+First cylinder <span class="token punctuation">(</span><span class="token number">655</span>-2610, default <span class="token number">655</span><span class="token punctuation">)</span>:
+<span class="token comment">#不用指定分区号，默认会从 5 开始分配，所以直接选择起始柱面</span>
+<span class="token comment">#注意：逻辑分区是在扩展分区内部再划分的，所以柱面是和扩展分区重叠的</span>
+Using default value <span class="token number">655</span>
+Last eylinder, +cylinders or +size<span class="token punctuation">(</span>K,M,G<span class="token punctuation">)</span><span class="token punctuation">(</span><span class="token number">655</span>-2610, default <span class="token number">2610</span><span class="token punctuation">)</span>:+2G
+<span class="token comment">#分配 2GB 大小</span>
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>： n				<span class="token operator">&lt;</span>---再建立一个逻辑分区
+Command action
+	l	logical <span class="token punctuation">(</span><span class="token number">5</span> or over<span class="token punctuation">)</span>
+	p	primary partition <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>
+l
+First cylinder <span class="token punctuation">(</span><span class="token number">917</span>-2610, default <span class="token number">917</span><span class="token punctuation">)</span>：
+Using default value <span class="token number">917</span>
+Last cylinder, +cylinders or +size<span class="token punctuation">(</span>K,M,G<span class="token punctuation">}</span><span class="token punctuation">(</span><span class="token number">917</span>-2610, default <span class="token number">2610</span><span class="token punctuation">)</span>:+2G
+
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>：P					<span class="token operator">&lt;</span>---查看一下已经建立的分区
+Disk /dev/sab: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytea
+<span class="token number">255</span> hends, <span class="token number">63</span> pectors/track, <span class="token number">2610</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+sector sime <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>mininum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+Diek identifier: Oxb4b0720c
+
+Device Boot		start		End		Blocks		Id		System
+/dev/sdbl		<span class="token number">1</span>			<span class="token number">654</span>		<span class="token number">15253223</span>+ 	<span class="token number">83</span> 		Linux			<span class="token operator">&lt;</span>---主分区
+/dev/sdb2		<span class="token number">655</span>			<span class="token number">2610</span>	<span class="token number">15711570</span>	<span class="token number">5</span> 		Extended		<span class="token operator">&lt;</span>---扩展分区
+/dev/sdb5		<span class="token number">655</span>			<span class="token number">916</span>		<span class="token number">2104483</span>+	<span class="token number">83</span>		Linux			<span class="token operator">&lt;</span>---逻辑分区1
+/dev/sdb6		<span class="token number">917</span> 		<span class="token number">1178</span>	<span class="token number">2104483</span>+ 	<span class="token number">83</span> 		Linux			<span class="token operator">&lt;</span>---逻辑分区2
+
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: w					<span class="token operator">&lt;</span>---保存并退出
+The partition cable has been aitered<span class="token operator">!</span>
+
+calling loctl<span class="token punctuation">(</span><span class="token punctuation">)</span> to re-read partition table.
+Syncing disks.
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment">#</span>
+<span class="token comment">#退回到提示符界面</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br></div></div><p>所有的分区在建立过程中如果不保存并退出是不会生效的，所以建立错了也没有关系，使用 q 命令不保存退出即可。如果使用了 w 命令，就会保存退出。有时因为系统的分区表正忙，所以需要重新启动系统才能使新的分区表生效。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code>Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: w							<span class="token operator">&lt;</span>---保存并退出
+The partition table has been altered<span class="token operator">!</span>
+
+Calling loctl<span class="token punctuation">(</span><span class="token punctuation">)</span> to re-read partition table.
+
+WARNING: Re-reading the partition table failed with error <span class="token number">16</span>:
+
+
+Device or resource busy.
+The kernel still uses the old table.
+The new table will be used at the next reboot.	<span class="token operator">&lt;</span>---要求重新启动，才能格式化
+Syncing disks.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br></div></div><p>看到了吗？必须重新启动！可是重新启动很浪费时间。如果不想重新启动，则可以使用 <code>partprobe</code> 命令。这个命令的作用是让系统内核重新读取分区表信息，这样就可以不用重新启动了。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># partprobe</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>如果这个命令不存在，则请安装 partied-2.1-18.el6.i686 这个软件包。<code>pariprobe</code> 命令不是必需的，如果没有提示重启系统，则直接格式化即可。</p>
+<h3 id="格式化分区" tabindex="-1"><a class="header-anchor" href="#格式化分区" aria-hidden="true">#</a> 格式化分区</h3>
+<p>分区完成后，如果不格式化写入文件系统，则是不能正常使用的。所以我们需要使用 <code>mkfs</code> 命令进行格式化。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkfs [选项] 分区设备文件名</span>
+选项：
+	-t 文件系统	：指定格式化的文件系统，如 ext3、ext4
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><p>我们刚刚建立了 <code>/dev/sdb1</code>（主分区)、<code>/dev/sdb2</code>（扩展分区）、<code>/dev/sdb5</code>（逻辑分区）和 <code>/dev/sdb6</code>（逻辑分区）这几个分区，其中 <code>/dev/sdb2</code> 不能被格式化。剩余的三个分区都需要格式化之后使用，这里我们格式化一个分区 <code>/dev/sdb6</code> 作为演示，其余分区的格式化方法一样。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkfs -t ext4 /dev/sdb6</span>
+<span class="token function">mke2fs</span> <span class="token number">1.41</span>.12 <span class="token punctuation">(</span><span class="token number">17</span>-May-2010<span class="token punctuation">)</span>
+<span class="token comment">#文件系统标签=						&lt;---这里指的是卷标名，我们没有设置卷标</span>
+操作系统:Linux
+块大小<span class="token operator">=</span><span class="token number">4096</span>（log<span class="token operator">=</span><span class="token number">2</span><span class="token punctuation">)</span>
+分块大小<span class="token operator">=</span><span class="token number">4096</span> （log<span class="token operator">=</span><span class="token number">2</span>）
+<span class="token assign-left variable">Stride</span><span class="token operator">=</span>O blocks, Stripe <span class="token assign-left variable">width</span><span class="token operator">=</span><span class="token number">0</span> blocks
+<span class="token number">131648</span> inodes, <span class="token number">526120</span> blocks
+<span class="token number">26306</span> blocks <span class="token punctuation">(</span><span class="token number">5.00</span>%<span class="token punctuation">)</span> reserved <span class="token keyword">for</span> the super user
+第一个数据块<span class="token operator">=</span><span class="token number">0</span>
+Maximum filesystem <span class="token assign-left variable">blocks</span><span class="token operator">=</span><span class="token number">541065216</span>
+<span class="token number">17</span> block <span class="token function">groups</span>
+<span class="token number">32768</span> blocks per group, <span class="token number">32768</span> fragments per group
+<span class="token number">7744</span> inodes per group
+Superblock backups stored on blocks:
+		<span class="token number">32768</span>， <span class="token number">98304</span>，163840，229376，294912
+正在写入 inodes 表：完成
+Creating journal <span class="token punctuation">(</span><span class="token number">16384</span> blocks<span class="token punctuation">)</span>：完成
+Writing superblocks and filesystem accounting information:完成
+
+This filesystem will be automatically checked every <span class="token number">39</span> mounts or <span class="token number">180</span> days, whichever comes first. Use tune2fs -c or -i to override.
+
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkfs -t ext4 /dev/sdb5</span>
+<span class="token comment">#把 /dev/sdb5 也格式化</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br></div></div><p><code>mkfs</code> 命令非常简单易用，不过是不能调整分区的默认参数的（比如块大小是 4096 Bytes），这些默认参数除非特殊情况，否则不需要调整。如果想要调整，就需要使用 <code>mke2fs</code> 命令重新格式化。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mke2fs [选项」分区设备文件名</span>
+选项：
+	-t 文件系统	：指定格式化成哪个文件系统，如ext2、ext3、ext4
+	-b 字节		：指定 block 的大小
+	-l 字节		：指定“字节/inode”的比例，也就是多少字节分配一个 inode
+	-j			：建立带有 ext3 日志功能的文件系统
+	-L 卷标名	：给文件系统设置卷标名，就不使用 e2label 命令设定了
+	
+<span class="token comment"># 例如：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mke2fs -t ext4 -b 2048 /dev/sdb6</span>
+<span class="token comment">#格式化分区，并指定 block 的大小为 2048 Bytes</span>
+<span class="token function">mke2fs</span> <span class="token number">1.41</span>.12 <span class="token punctuation">(</span><span class="token number">27</span>-May-2010<span class="token punctuation">)</span>
+文件系统标签<span class="token operator">=</span>
+操作系统:Linux
+块大小<span class="token operator">=</span><span class="token number">2048</span> （log<span class="token operator">=</span><span class="token number">1</span>）			<span class="token operator">&lt;</span>--block 的大小就不再是 <span class="token number">4096</span> Bytes 了
+分块大小<span class="token operator">=</span><span class="token number">2048</span><span class="token punctuation">(</span>log<span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">)</span>
+<span class="token assign-left variable">Stride</span><span class="token operator">=</span><span class="token number">0</span> blocks, Stripe <span class="token assign-left variable">width</span><span class="token operator">=</span><span class="token number">0</span> blocks
+<span class="token number">131560</span> inodes, <span class="token number">1052240</span> blocks
+<span class="token number">52612</span> blocks <span class="token punctuation">(</span><span class="token number">5.00</span>%<span class="token punctuation">)</span> reserved <span class="token keyword">for</span> the super user
+第一个数据块<span class="token operator">=</span><span class="token number">0</span>
+Maximum filesystem <span class="token assign-left variable">blocks</span><span class="token operator">=</span><span class="token number">538968064</span>
+<span class="token number">65</span> block <span class="token function">groups</span>
+<span class="token number">16384</span> blocks per group, <span class="token number">16384</span> fragments per group
+<span class="token number">2024</span> Lnodes per group
+Superblock backups stored on blocks:
+		<span class="token number">16384</span>， <span class="token number">49152</span>，81920，114688，147456，409600，442368，802816
+		
+正在写入 inode 表：完成
+creating journal <span class="token punctuation">(</span><span class="token number">32768</span> blocks<span class="token punctuation">)</span>：完成
+Writing superblocks and filesystem accounting information:完成
+This filesystem will be automatically checked every <span class="token number">38</span> mounts or <span class="token number">180</span> days, whichever comes First. Use tune2fs,-c or -i to override.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br></div></div><p>如果没有特殊需要，那么还是 <code>mkfs</code> 命令简单易用。</p>
+<h3 id="建立挂载点并挂载" tabindex="-1"><a class="header-anchor" href="#建立挂载点并挂载" aria-hidden="true">#</a> 建立挂载点并挂载</h3>
+<p>硬盘已经准备完毕，接下来就是和光盘、U盘一样的步骤，建立挂载点并挂载使用了。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /disk5</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkdir /disk6</span>
+<span class="token comment">#建立两个目录，作为 /dev/sdb5 和 /dev/sdb6 两个分区的挂载点</span>
+<span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/sdb5 /disk5/</span>
+<span class="token punctuation">[</span>rootelocalhost ~<span class="token punctuation">]</span><span class="token comment"># mount /dev/sdb6 /disk6/</span>
+<span class="token comment">#挂载两个分区，文件系统 Linux 会自动查找</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount</span>
+<span class="token comment">#查看一下</span>
+/dev/sda3 on / <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+proc on /proc <span class="token builtin class-name">type</span> proc <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+sysfs on /sys <span class="token builtin class-name">type</span> sysfs <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+devpts on /dev/pts <span class="token builtin class-name">type</span> devpts <span class="token punctuation">(</span>rw,gid<span class="token operator">=</span><span class="token number">5</span>,mode<span class="token operator">=</span><span class="token number">620</span><span class="token punctuation">)</span>
+tmpfs on /dev/shm <span class="token builtin class-name">type</span> tmpfs <span class="token punctuation">(</span>rw,rootcontext<span class="token operator">=</span><span class="token string">"system_u:object_r:tmpfs_t:s0"</span><span class="token punctuation">)</span>
+/dev/sda1 on /boot <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+none on /proc/sys/fs/binfmt_misc <span class="token builtin class-name">type</span> binfmt_misc <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+sunrpc on /var/lib/nfs/rpe pipefs <span class="token builtin class-name">type</span> rpc_pipefs <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+/dev/sdb5 on /disk5 <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+/dev/sdb6 on /disk6 <span class="token builtin class-name">type</span> ext4 <span class="token punctuation">(</span>rw<span class="token punctuation">)</span>
+<span class="token comment">#两个分区已经挂载上了</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br></div></div><p>挂载非常简单吧，不过注意这种挂载只是临时挂载，重启系统后还需要手工挂载。</p>
+<h3 id="实现开机后自动挂载" tabindex="-1"><a class="header-anchor" href="#实现开机后自动挂载" aria-hidden="true">#</a> 实现开机后自动挂载</h3>
+<p>如果要实现开机后自动挂载，就需要修改系统的自动挂载文件 <code>/etc/fstab</code>。不过要小心这个文件会影响系统的启动，因为系统就是依赖这个文件决定启动时加载的文件系统的。我们打开这个文件看看吧。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span> <span class="token function">vi</span> /etc/fstab
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>c2ca6f57-b15c-43ea-bca0-f239083d8bdz	/			ext4	defaults		<span class="token number">1</span> <span class="token number">1</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>0b23d315-33a7-48a4-bd37-9248e5c44345	/boot		ext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>4021be19-2751-4dd2-98ca-383368c39eab	swap		swap	defaults		<span class="token number">0</span> <span class="token number">0</span>
+<span class="token comment">#只有这三个是真正的硬盘分区，下面的都是虚拟文件系统或交换分区</span>
+tmpfs										/dev/shm	tmpfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+devpts										/dev/pts	devpts	gid-5,mode-620 	<span class="token number">0</span> <span class="token number">0</span>
+sysfs										/sys		sysfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+proc										/proc		Proc	defaults		<span class="token number">0</span> <span class="token number">0</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br></div></div><p>这个文件共有 6 个字段，我们一一说明。</p>
+<ul>
+<li>
+<p>第一个字段：分区设备文件名或 UUID（硬盘通用唯一识别码，可以理解为硬盘的 ID）。</p>
+<blockquote>
+<p>这个字段在 CentOS 5.5 系统中是写入分区的卷标名或分区设备文件名的，现在变成了硬盘的 UUID。这样做的好处是当硬盘增加了新的分区，或者分区的顺序改变，或者内核升级后，仍然能够保证分区能够正确地加载，而不至于造成启动障碍。</p>
+</blockquote>
+<blockquote>
+<p>那么，每个分区的 UUID 到底是什么呢？用我们讲过的 <code>dumpe2fs</code> 命令是可以查看到的，命令如下：</p>
+</blockquote>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># dumpe2fs /dev/sdb5</span>
+dumpe2fs <span class="token number">1.41</span>.12 <span class="token punctuation">(</span><span class="token number">17</span>-May-2010<span class="token punctuation">)</span>
+Filesystem volume name:		test_label
+Last mounted on:			<span class="token operator">&lt;</span>not available<span class="token operator">></span>
+Fileaystem UUID:			63f238f0-2715-4821-8ed1-b3d18756a3ef			<span class="token operator">&lt;</span>---UUID
+<span class="token punctuation">..</span>.省略部分输出<span class="token punctuation">..</span>.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br></div></div><blockquote>
+<p>也可以通过查看每个硬盘的 UUID 的链接文件名来确定 UUID，命令如下：</p>
+</blockquote>
+<div class="language-text ext-text line-numbers-mode"><pre v-pre class="language-text"><code>[root@localhost ~]# ls -l /dev/disk/by-uuid/
+总用量 0
+1rwxrwarwx. 1 root root 10 4 月 11 00:17 0b23d315-33a7-4Ba4-bd37-9248e5c44345 -> ../../sda1
+1rwxrwxrwx. 1 root root 10 4 月 11 00:17 4021be19-2751-4dd2-98cc-383368c39aab -> ../../sda2
+lrwxrwxrwx. 1 root root 10 4 月 11 00:17 63f238f0-a715-4821-8ed1-b3d18756a3c0 -> ../../sdb5
+1rwxrwxrwx. 1 root root 10 4 月 11 00:17 6858b440-ad9e-45cb-b411-963c5419e0e6 -> ../../sdb6
+1rwxrwxrwx. I root root 10 4 月 11 00:17 c2ca6f57-b15c-43ea-bca0-f239083d8bd2 -> ../../sda3
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br></div></div></li>
+<li>
+<p>第二个字段：挂载点。再强调一下，挂载点应该是已经建立的空目录。</p>
+</li>
+<li>
+<p>第三个字段：文件系统名称，CentOS 6.3 的默认文件系统应该是 ext4。</p>
+</li>
+<li>
+<p>第四个字段：挂载参数，这个参数和 <code>mount</code> 命令的挂载参数一致。</p>
+</li>
+<li>
+<p>第五个字段：指定分区是否被 dump 备份，0 代表不备份，1 代表每天备份，2 代表不定期备份。</p>
+</li>
+<li>
+<p>第六个字段：指定分区是否被 <code>fsck</code> 检测，0 代表不检测，其他数字代表检测的优先级，1 的优先级比 2 高。所以先检测 1 的分区，再检测 2 的分区。一般根分区的优先级是 1，其他分区的优先级是 2。</p>
+</li>
+</ul>
+<p>能看懂这个文件了吧？我们把 <code>/dev/sdb5</code> 和 <code>/dev/sdb6</code> 两个分区加入 <code>/etc/fstab</code> 文件,命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vi /etc/fstab</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>c2ca6f57-b15c-43ea-bca0-f239083d8bd2	/			ext4	defaults		<span class="token number">1</span> <span class="token number">1</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>0b23d315-33a7-48a4-bd37-9248e5c44345	/boot		vext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token assign-left variable">UurD</span><span class="token operator">=</span>4021be19-2751-4dd2-98cc-383368c39edb	swap		swap	defaults		<span class="token number">0</span> <span class="token number">0</span>
+tmpfs										/dev/shm	tmpfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+devpts										/dev/pts	devpts	gid-5,mode<span class="token operator">=</span><span class="token number">620</span>	<span class="token number">0</span> <span class="token number">0</span>
+sysfs										/sys		sysfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+Proc										/proc		proc	defaults		<span class="token number">0</span> <span class="token number">0</span>
+/dev/sdb5									/disk5		ext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+/dev/sdb6									/disk6		ext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token comment">#这里没有写分区的 UUID，而是直接写人分区设备文件名，这也是可以的。不过。如果不写UIID，就要注意，在修改了磁盘顺序后，/etc/fstab 文件也要做相应的改变</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p>这里直接使用分区的设备文件名作为此文件的第一个字段，当然也可以写分区的 UUID。</p>
+<p>只不过 UUID 更加先进，设备文件名稍微简单一点。</p>
+<p>至此，分区就建立完成了，接下来只要重新启动，测试一下系统是否可以正常启动就可以了。只要 <code>/etc/fstab</code> 文件修改正确，就不会出现任何问题。</p>
+<h3 id="etc-fstab-文件修复" tabindex="-1"><a class="header-anchor" href="#etc-fstab-文件修复" aria-hidden="true">#</a> /etc/fstab 文件修复</h3>
+<p>如果把 <code>/etc/fstab</code> 文件修改错了，也重启了，系统崩溃启动不了了，那该怎么办？比如？</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vi /etc/fstab</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>c2ca6f57-b15c-43ea-bca0-f239083d8bd2	/			ext4	defaults		<span class="token number">1</span> <span class="token number">1</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>0b23d315-33a7-48a4-bd37-9248e5c44345	/boot		vext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token assign-left variable">UurD</span><span class="token operator">=</span>4021be19-2751-4dd2-98cc-383368c39edb	swap		swap	defaults		<span class="token number">0</span> <span class="token number">0</span>
+tmpfs										/dev/shm	tmpfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+devpts										/dev/pts	devpts	gid-5,mode<span class="token operator">=</span><span class="token number">620</span>	<span class="token number">0</span> <span class="token number">0</span>
+sysfs										/sys		sysfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+Proc										/proc		proc	defaults		<span class="token number">0</span> <span class="token number">0</span>
+/dev/sdb5									/disk5		ext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+/dev/sdb									/disk6		ext4	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token comment">#故意把 /dev/sdb6 写成了 /dev/sdb</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p>我们重新启动系统，真的报错了，如图15-12 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/fstable1.png" alt="fstable1" loading="lazy"></p>
+<p><strong>图15-12	<u>系统启动报错</u></strong></p>
+</div>
+<p>先别急，仔细看看，系统提示输入 root 密码，我们输入密码试试，如图15-13 所示。</p>
+<div class="custom-container center">
+<p><img src="@source/project/Linux/Linux_basic/assets/fstable2.png" alt="fstable2" loading="lazy"></p>
+<p><strong>图15-13	<u>root 登录</u></strong></p>
+</div>
+<p>我们又看到了系统提示符，赶快把 <code>/etc/fstab</code> 文件修改回来吧。又报错了，提示 “fstab readonly“。别慌，分析一下原因提示是没有写权限，那么只要把 <code>/</code> 分区重新挂载上读写权限不就可以修改了吗？命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mount -o remount,rw /</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>再去修改 <code>/etc/fstab</code> 文件，把它改回来就可以正常启动了。</p>
+<h2 id="parted-命令分区" tabindex="-1"><a class="header-anchor" href="#parted-命令分区" aria-hidden="true">#</a> parted 命令分区</h2>
+<p>在 Linux 系统中有两种常见的分区表：MBR 分区表（主引导记录分区表）和 GPT 分区表（GUID 分区表）。</p>
+<ul>
+<li>
+<p>MBR 分区表：支持的最大分区是 2TB （1TB=1024GB）；最多支持 4 个主分区，或 3 个主分区 1 个扩展分区。</p>
+</li>
+<li>
+<p>GPT 分区表：支持最大 18EB 的分区（1EB=1024PB=1024×1024TB）；最多支持 128个分区，其中 1 个系统保留分区，127 个用户自定义分区。</p>
+</li>
+</ul>
+<p><code>fdisk</code> 工具不能支持 GPT 分区表，所以最大只能支持 2TB 的分区。不过随着硬盘容量的不断增加，总有一天 2TB 的分区会不够用，这时就必须使用 <code>parted</code> 命令来进行系统分区了。不过 <code>parted</code> 命令也有一点小问题，就是命令自身分区的时候只能格式化成 ext2 文件系统，不支持 ext3 文件系统，更不用说 ext4 文件系统了（这里只是指不能用 parted 命令把分区格式化成 ext4 文件系统，但是 parted 命令还是可以识别 ext4 文件系统的）。不过这没有太大的影响，因为我们可以先分区再用 <code>mkfs</code> 命令进行格式化。</p>
+<h3 id="parted-交互模式" tabindex="-1"><a class="header-anchor" href="#parted-交互模式" aria-hidden="true">#</a> parted 交互模式</h3>
+<p><code>parted</code> 命令是可以在命令行直接分区和格式化的，不过 <code>parted</code> 交互模式才是更加常用的命令方式。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># parted 硬盘设备文件名</span>
+<span class="token comment">#进入交互模式</span>
+
+<span class="token comment"># 例如：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># parted /dev/sdb</span>
+<span class="token comment">#打算继续划分/dev/sdb硬盘</span>
+GNU Parted <span class="token number">2.1</span>
+使用/dev/sdb
+Welcome to GNU Parted<span class="token operator">!</span> Type <span class="token string">'help'</span> to view a list of commands.
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> <span class="token builtin class-name">help</span>				<span class="token operator">&lt;</span>--parted 的等待输入交互命令的位置，输入 help，可以看到在交互模式下支持的所有命令
+  align-check TYPE N					   check partition N <span class="token keyword">for</span> TYPE<span class="token punctuation">(</span>min<span class="token operator">|</span>opt<span class="token punctuation">)</span> alignment
+  <span class="token builtin class-name">help</span> <span class="token punctuation">[</span>COMMAND<span class="token punctuation">]</span>                           print general help, or <span class="token builtin class-name">help</span> on COMMAND
+  mklabel,mktable LABEL-TYPE               create a new disklabel <span class="token punctuation">(</span>partition table<span class="token punctuation">)</span>
+  mkpart PART-TYPE <span class="token punctuation">[</span>FS-TYPE<span class="token punctuation">]</span> START END     <span class="token function">make</span> a partition
+  name NUMBER NAME                         name partition NUMBER as NAME
+  print <span class="token punctuation">[</span>devices<span class="token operator">|</span><span class="token function">free</span><span class="token operator">|</span>list,all<span class="token operator">|</span>NUMBER<span class="token punctuation">]</span>     display the partition table, available devices, <span class="token function">free</span> space, all found partitions, or a 											 particular partition
+  quit                                     <span class="token builtin class-name">exit</span> program
+  rescue START END                         rescue a lost partition near START and END
+  resizepart NUMBER END                    resize partition NUMBER
+  <span class="token function">rm</span> NUMBER                                delete partition NUMBER
+  <span class="token keyword">select</span> DEVICE                            choose the device to edit
+  disk_set FLAG STATE                      change the FLAG on selected device
+  disk_toggle <span class="token punctuation">[</span>FLAG<span class="token punctuation">]</span>                       toggle the state of FLAG on selected device
+  <span class="token builtin class-name">set</span> NUMBER FLAG STATE                    change the FLAG on partition NUMBER
+  toggle <span class="token punctuation">[</span>NUMBER <span class="token punctuation">[</span>FLAG<span class="token punctuation">]</span><span class="token punctuation">]</span>                   toggle the state of FLAG on partition NUMBER
+  unit UNIT                                <span class="token builtin class-name">set</span> the default unit to UNIT
+  version                                  display the version number and copyright information of GNU Parted
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span>                                                                                                                           
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br></div></div><p><code>parted</code> 交互命令比较多，我们介绍常见的命令，如表15-7 所示。</p>
+<p><strong>表15-7	<u>parted 常见的交互命令</u></strong></p>
+<table>
+<thead>
+<tr>
+<th>parted 交互命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>check NUMBER</td>
+<td>做一次简单的文件系统检测</td>
+</tr>
+<tr>
+<td>cp [FROM-DEVICE] FROM-NUMBER TO-NUMBER</td>
+<td>复制文件系统到另一个分区</td>
+</tr>
+<tr>
+<td>help [COMMAND]</td>
+<td>显示所有的命令帮助</td>
+</tr>
+<tr>
+<td>mklabel,mktable LABEL-TYPE</td>
+<td>创建新的磁盘卷标（分区表）</td>
+</tr>
+<tr>
+<td>mkfs NUMBER FS-TYPE</td>
+<td>在分区上建立文件系统</td>
+</tr>
+<tr>
+<td>mkpart PART-TYPE [FS-TYPE] START END</td>
+<td>创建一个分区</td>
+</tr>
+<tr>
+<td>mkpartfs PART-TYPE FS-TYPE START END</td>
+<td>创建分区，并建立文件系统</td>
+</tr>
+<tr>
+<td>move NUMBER START END</td>
+<td>移动分区</td>
+</tr>
+<tr>
+<td>name NUMBER NAME</td>
+<td>给分区命名</td>
+</tr>
+<tr>
+<td>print [devices|free|list,all|NUMBER]</td>
+<td>显示分区表、活动设备、空闲空间、所有分区</td>
+</tr>
+<tr>
+<td>quit</td>
+<td>退出</td>
+</tr>
+<tr>
+<td>rescue START END</td>
+<td>修复丢失的分区</td>
+</tr>
+<tr>
+<td>resize NUMBER START END</td>
+<td>修改分区大小</td>
+</tr>
+<tr>
+<td>rm NUMBER</td>
+<td>删除分区</td>
+</tr>
+<tr>
+<td>select DEVICE</td>
+<td>选择需要编辑的设备</td>
+</tr>
+<tr>
+<td>set NUMBER FLAG STATE</td>
+<td>改变分区标记</td>
+</tr>
+<tr>
+<td>toggle [NUMBER [FLAG]]</td>
+<td>切换分区表的状态</td>
+</tr>
+<tr>
+<td>unit UNIT</td>
+<td>设置默认的单位</td>
+</tr>
+<tr>
+<td>Version</td>
+<td>显示版本</td>
+</tr>
+</tbody>
+</table>
+<h3 id="parted-命令的使用" tabindex="-1"><a class="header-anchor" href="#parted-命令的使用" aria-hidden="true">#</a> parted 命令的使用</h3>
+<ol>
+<li><strong>查看分区表</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print										<span class="token operator">&lt;</span>---输入 print 指令
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>				<span class="token operator">&lt;</span>---硬盘参数，是虚拟机
+Disk/dev/sdb: <span class="token number">21</span>.5GB								<span class="token operator">&lt;</span>---硬盘大小
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B			<span class="token operator">&lt;</span>---扇区大小
+Partition Table: msdos								<span class="token operator">&lt;</span>---分区表类型，是MBR分区表
+Number Start End Size Type File system 标志
+<span class="token number">1</span> <span class="token number">32</span>.3kB 5379MB 5379MB primary
+<span class="token number">2</span> 5379MB <span class="token number">21</span>.5GB <span class="token number">16</span>.1GB extended
+<span class="token number">5</span> 5379MB 7534MB 2155MB logical ext4
+<span class="token number">6</span> 7534MB 9689MB 2155MB logical ext4
+<span class="token comment">#看到了我们使用 fdisk 命令创建的分区，其中 1 分区没被格式化；2 分区是扩展分区，不能被格式化</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br></div></div><p>使用 print 命令可以査看分区表信息，包括硬盘参数、硬盘大小、扇区大小、分区表类型和分区信息。分区信息共有 7 列，分别如下：</p>
+<ul>
+<li>
+<p>Number：分区号，比如，1号就代表 <code>/dec/sdb1</code>；</p>
+</li>
+<li>
+<p>Start：分区起始位置。这里不再像 fdisk 那样用柱面表示，使用字节表示更加直观；</p>
+</li>
+<li>
+<p>End：分区结束位置；</p>
+</li>
+<li>
+<p>Size：分区大小；</p>
+</li>
+<li>
+<p>Type：分区类型，有 primary、extended、logical 等类型；</p>
+</li>
+<li>
+<p>Filesystem：文件系统类型；</p>
+</li>
+<li>
+<p>标志：分区的标记。</p>
+</li>
+</ul>
+<ol start="2">
+<li><strong>修改成 GPT 分区表</strong></li>
+</ol>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>partcd<span class="token punctuation">)</span> mklabel gpt
+<span class="token comment">#修改分区表命令</span>
+警告：正在使用/dev/sdb上的分区。					<span class="token operator">&lt;</span>---由于/dev/sdb分区已经挂载，所以有警告。注意，如果强制修改，那么原有分区及数据会消失
+忽略/Ignore/放弃/Cancel? ignore				 	<span class="token operator">&lt;</span>---输入ignore忽略报错
+警告：The existing disk label on /dev/sdb will be destroyed and all data on this disk will be lost. Do you want to continue?
+是/Yes/否/No? <span class="token function">yes</span>								<span class="token operator">&lt;</span>---输入 <span class="token function">yes</span>
+警告：WARNING: the kernel failed to re-read the partition table on /dev/sdb <span class="token punctuation">(</span>设备或资源忙）.
+As a result, it may not reflect all of your changes <span class="token keyword">until</span> after reboot.			 	 <span class="token operator">&lt;</span>---下次重启后才能生效
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print									<span class="token operator">&lt;</span>---查看一下分区表
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>
+Disk /dev/sdb: <span class="token number">21</span>.5GB
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B
+Partition Table: gpt							<span class="token operator">&lt;</span>---分区表已经变成 GPT
+Number Start End Size File system Name 标志		<span class="token operator">&lt;</span>---所有的分区都消失了
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br></div></div><p>修改了分区表，如果这块硬盘上已经有分区了，那么原有分区和分区中的数据都会消失，而且需要重启系统才能生效。</p>
+<p>另外，我们转换分区表的目的是支持大于 2TB 的分区，如果分区并没有大于 2TB，那么这一步是可以不执行的。</p>
+<div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>一定要把 <code>/etc/fstab</code> 文件和原有分区中的内容删除才能重启，否则会报错。</p>
+</div>
+<ol start="3">
+<li><strong>建立分区</strong></li>
+</ol>
+<p>因为修改过了分区表，所以 <code>/dev/sdb</code> 硬盘中的所有数据都消失了，我们就可以重新对这块硬盘分区了。不过，在建立分区时，默认文件系统就只能是 ext2 了。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>parted<span class="token punctuation">)</span>mkpart
+<span class="token comment">#输入创建分区命令，后面不要参数，全部靠交互</span>
+指定
+分区名称？ <span class="token punctuation">[</span><span class="token punctuation">]</span>?disk1							<span class="token operator">&lt;</span>---分区名称，这里命名为disk <span class="token number">1</span>
+文件系统系统？ <span class="token punctuation">[</span>ext2<span class="token punctuation">]</span>?						<span class="token operator">&lt;</span>---文件系统类型，直接回车，使用默认文件系统ext2
+起始点？ 1MB									<span class="token operator">&lt;</span>---分区从1MB开始
+结束点？5GB									<span class="token operator">&lt;</span>---分区到5GB结束
+<span class="token comment">#分区完成</span>
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print								<span class="token operator">&lt;</span>---查看一下
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>
+Disk/dev/sdb: <span class="token number">21</span>.5GB
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B
+Partition Table: gpt
+
+Number Start End Size <span class="token function">file</span> system Name 标志
+<span class="token number">1</span> 1049kB 5000MB 4999MB disk1	<span class="token operator">&lt;</span>---分区1已经出现
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br></div></div><p>不知道大家有没有注意到，我们现在用 print 查看的分区和第一次查看 MBR 分区表的分区时有些不一样了，少了 Type 这个字段，也就是分区类型字段，多了 Name（分区名）字段。分区类型是用于标识主分区、扩展分区和逻辑分区的，不过这种标识只在 MBR 分区表中使用，现在已经变成了 GPT 分区表，所以就不再有 Type 类型了。</p>
+<ol start="4">
+<li><strong>建立文件系统</strong></li>
+</ol>
+<p>分区分完后，还需要进行格式化。我们知道，如果使用 parted 交互命令格式化，则只能格式化成 ext2 文件系统。我们在这里要演示一下 parted 命令的格式化方法，所以就格式化成 ext2 文件系统。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>parted<span class="token punctuation">)</span> <span class="token function">mkfs</span>
+<span class="token comment">#格式化命令（很奇怪，也是mkfs，但是这只是parted的交互命令）</span>
+WARNING: you are attempting to use <span class="token function">parted</span> to operate on <span class="token punctuation">(</span>mkfs<span class="token punctuation">)</span> a <span class="token function">file</span> system.
+<span class="token function">parted</span><span class="token string">'s file system manipulation code is not as robust as what you'</span>ll <span class="token function">find</span> <span class="token keyword">in</span>
+dedicated, file-system-specific packages like e2fsprogs. We recommend
+you use <span class="token function">parted</span> only to manipulate partition tables, whenever possible.
+Support <span class="token keyword">for</span> performing <span class="token function">most</span> operations on <span class="token function">most</span> types of <span class="token function">file</span> systems
+will be removed <span class="token keyword">in</span> an upcoming release.
+警告：The existing <span class="token function">file</span> system will be destroyed and all data on the partition will be lost. Do you want to continue?
+是/Yes/否/No? <span class="token function">yes</span>
+<span class="token comment">#警告你格式化丟失，没关系，已经丢失过了</span>
+分区编号？ <span class="token number">1</span>
+文件系统类型 <span class="token punctuation">[</span>ext2<span class="token punctuation">]</span>?
+<span class="token comment">#指定文件系统类型，写别的也没用，直接回车</span>
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print <span class="token comment">#格式化完成，查看一下</span>
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>
+Disk/dev/sdb: <span class="token number">21</span>,5GB
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B
+Partition Table: gpt
+
+Number Start End Size File system Name标志
+<span class="token number">1</span> 1049kB 5000MB 4999MB ext2 diski
+<span class="token comment">#拥有了文件系统</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br></div></div><p>如果要格式化成 ext4 文件系统，那么请 mkfs 命令帮忙吧（注意：不是 <code>parted</code> 交互命令中的 <code>mkfs</code>，而是系统命令 <code>mkfs</code>）。</p>
+<ol start="5">
+<li><strong>调整分区大小</strong></li>
+</ol>
+<p>parted 命令还有一大优势，就是可以调整分区的大小（在 Windows 中也可以实现，不过要么需要转换成动态磁盘，要么需要依赖第三方工具，如硬盘分区魔术师）。起始 Linux 中 LVM 和 RAID 是可以支持分区调整的，不过这两种方法也可以看成动态磁盘方法，使用 parted 命令调整分区更加简单。</p>
+<div class="custom-container tip"><p class="custom-container-title">注意</p>
+<p>parted 调整已经挂载使用的分区时，是不会影响分区中的数据的，也就是说，数据不会丢失。但是一定要先卸载分区，再调整分区大小，否则数据是会出现问题的。另外，要调整大小的分区必须已经建立了文件系统（格式化），否则会报错。</p>
+</div>
+<p>命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>parted<span class="token punctuation">)</span> resize
+分区编号？ <span class="token number">1</span>
+<span class="token comment">#指定要修改的分区编号</span>
+起始点？ <span class="token punctuation">[</span>1049kB<span class="token punctuation">]</span>? 1MB
+<span class="token comment">#分区起始位置</span>
+结束点？ <span class="token punctuation">[</span>5000MB<span class="token punctuation">]</span>? 6GB
+分区结束位置
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print
+<span class="token comment">#查看一下</span>
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>
+Disk/dev/sdb: <span class="token number">21</span>,5GB
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B
+Partition Table: gpt
+Number Start End Size File system Name标志
+<span class="token number">1</span> 1049kB 6000MB 5999MB ext2 diski
+<span class="token comment">#分区大小改变</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br></div></div><ol start="6">
+<li><strong>删除分区</strong></li>
+</ol>
+<p>命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">(</span>parted<span class="token punctuation">)</span> <span class="token function">rm</span>
+<span class="token comment">#删除分区命令</span>
+分区编号？ <span class="token number">1</span>
+<span class="token comment">#指定分区编号</span>
+<span class="token punctuation">(</span>parted<span class="token punctuation">)</span> print
+<span class="token comment">#查看一下</span>
+Model: VMware, VMware Virtual S <span class="token punctuation">(</span>scsi<span class="token punctuation">)</span>
+Disk/dev/sdb: <span class="token number">21</span>.5GB
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: 512B/512B
+Partition Table: gpt
+Number Start End Size File system Name 标志
+<span class="token comment">#分区消失</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br></div></div><p>要注意的是，<code>parted</code> 中所有的操作都是立即生效的，没有保存生效的概念。这一点和 <code>fdisk</code> 交互命令明显不同，所以做的所有操作大家要加倍小心。</p>
+<p>那么，到底是使用 <code>fdisk</code> 命令，还是使用 <code>parted</code> 命令进行分区呢？这完全看个人习惯，我们更加习惯使用 <code>fdisk</code> 命令。</p>
+<h2 id="分配-swap-分区" tabindex="-1"><a class="header-anchor" href="#分配-swap-分区" aria-hidden="true">#</a> 分配 swap 分区</h2>
+<h3 id="虚拟内存和物理内存" tabindex="-1"><a class="header-anchor" href="#虚拟内存和物理内存" aria-hidden="true">#</a> 虚拟内存和物理内存</h3>
+<p>我们都知道，直接从内存读写数据要比从硬盘读写数据快得多，因此更希望所有数据的读取和写入都在内存中完成，然而内存是有限的，这样就引出了物理内存与虚拟内存的概念。</p>
+<p>物理内存就是系统硬件提供的内存大小，是真正的内存，相对于物理内存。<strong>在 Linux 下还有一个虚拟内存的概念，虚拟内存是为了满足物理内存的不足而提出的策略，它是利用磁盘空间虚拟出的一块逻辑内存。用作虚拟内存的磁盘空间被称为交换空间（又称 swap 空间）。</strong></p>
+<p>作为物理内存的扩展，Linux 会在物理内存不足时，使用交换分区的虚拟内存，更详细地说，就是内核会将暂时不用的内存块信息写到交换空间，这样一来，物理内存得到了释放，这块内存就可以用于其他目的，当需要用到原始的内容时，这些信息会被重新从交换空间读入物理内存。</p>
+<p>Linux 的内存管理采取的是分页存取机制，为了保证物理内存能得到充分的利用，内核会在适当的时候将物理内存中不经常使用的数据块自动交换到虚拟内存中，而将经常使用的信息保留到物理内存。</p>
+<p>要深入了解 Linux 内存运行机制，需要知道下面提到的几个方面：</p>
+<ul>
+<li>
+<p>首先，Linux 系统会不时地进行页面交换操作，以保持尽可能多的空闲物理内存，即使并没有什么事情需要内存，Linux 也会交换出暂时不用的内存页面，因为这样可以大大节省等待交换所需的时间。</p>
+</li>
+<li>
+<p>其次，Linux 进行页面交换是有条件的，不是所有页面在不用时都交换到虚拟内存，Linux 内核根据“最近最经常使用”算法，仅仅将一些不经常使用的页面文件交换到虚拟内存。</p>
+</li>
+</ul>
+<p>有时我们会看到这么一个现象，Linux 物理内存还有很多，但是交换空间也使用了很多，其实这并不奇怪。例如，一个占用很大内存的进程运行时，需要耗费很多内存资源，此时就会有一些不常用页面文件被交换到虚拟内存中，但后来这个占用很多内存资源的进程结束并释放了很多内存时，刚才被交换出去的页面文件并不会自动交换进物理内存（除非有这个必要），那么此时系统物理内存就会空闲很多，同时交换空间也在被使用，就出现了刚才所说的现象了。</p>
+<p>最后，交换空间的页面在使用时会首先被交换到物理内存，如果此时没有足够的物理内存来容纳这些页面，它们又会被马上交换出去，如此一来，虚拟内存中可能没有足够的空间来存储这些交换页面，最终会导致 Linux 出现假死机、服务异常等问题。Linux 虽然可以在一段时间内自行恢复，但是恢复后的系统己经基本不可用了。</p>
+<p>因此，合理规划和设计 Linux 内存的使用是非常重要的，关于物理内存和交换空间的大小设置问题，取决于实际所用的硬盘大小，但大致遵循这样一个基本原则：</p>
+<ol>
+<li>如果内存较小（根据经验，物理内存小于 4GB），一般设置 swap 分区大小为内存的 2 倍；</li>
+<li>如果物理内存大于 4GB，而小于 16GB，可以设置 swap 分区大小等于物理内存；</li>
+<li>如果内存大小在 16GB 以上，可以设置 swap 为 0，但并不建议这么做，因为设置一定大小的 swap 分区是有一定作用的。</li>
+</ol>
+<h3 id="分区" tabindex="-1"><a class="header-anchor" href="#分区" aria-hidden="true">#</a> 分区</h3>
+<p>有时候服务器的访问量却是很大，有可能出现 swap 分区不够用的情况，所以我们需要学习 swap 分区的构建方法。建立新的 swap 分区，只需要执行以下几个步骤。</p>
+<ul>
+<li>分区：不管是 <code>fdisk</code> 命令还是 <code>parted</code> 命令，都需要先建立一个分区。</li>
+<li>格式化：格式化命令稍有不同，使用 <code>mkswap</code> 命令把分区格式化成 swap 分区。</li>
+<li>使用 swap 分区。</li>
+</ul>
+<p>我们一步一步来实现。</p>
+<ol>
+<li><strong>分区</strong></li>
+</ol>
+<p>命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># fdisk /dev/sdb</span>
+<span class="token comment">#以/dev/sdb 分区为例</span>
+WARNING: DOS-compatible mode is deprecated. It<span class="token string">'s strongly recommended to switch off the mode (command '</span>c<span class="token string">') and change display units to sectors (command '</span>u'<span class="token operator">!</span><span class="token punctuation">)</span>.
+
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: n													<span class="token operator">&lt;</span>---新建
+Command action
+	e	extended
+	p	primary partition <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>
+p																																					<span class="token operator">&lt;</span>---主分区
+Partition number <span class="token punctuation">(</span><span class="token number">1</span>-4<span class="token punctuation">)</span>: <span class="token number">1</span>												<span class="token operator">&lt;</span>---分区编号
+First cylinder <span class="token punctuation">(</span><span class="token number">1</span>-2610, default <span class="token number">1</span><span class="token punctuation">)</span>:									<span class="token operator">&lt;</span>---起始柱面
+Using default value <span class="token number">1</span>
+Last cylinder, +cylinders or +size<span class="token punctuation">{</span>K,M,G<span class="token punctuation">}</span> <span class="token punctuation">(</span><span class="token number">1</span>-2610, default <span class="token number">2610</span><span class="token punctuation">)</span>：+500M<span class="token operator">&lt;</span>---大小
+
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>：p													<span class="token operator">&lt;</span>---查看一下
+
+Disk /dev/sdb：21.5 GB，21474836480 bytes
+<span class="token number">255</span> heads, <span class="token number">63</span> sectors/track, <span class="token number">2610</span> cylinders
+<span class="token function">units</span> <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+Disk identifier: Ox00000ebd
+
+Device Boot		Start		End		Blocks		Id		System
+/dev/sdb1		<span class="token number">1</span>			<span class="token number">65</span>		<span class="token number">522081</span>		<span class="token number">83</span>		Linux
+<span class="token comment">#刚分配的分区 ID 是 83，是 Linux 分区，我们在这里要分配 swap 分区</span>
+
+<span class="token builtin class-name">command</span> <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: t													<span class="token operator">&lt;</span>---修改分区的系统 ID
+Selected partition <span class="token number">1</span>													<span class="token operator">&lt;</span>---只有一个分区，所以不用选择分区了
+Hex code <span class="token punctuation">(</span>type I to list codes<span class="token punctuation">)</span>: <span class="token number">82</span>									<span class="token operator">&lt;</span>---改为 swap 分区的 ID
+Changed system <span class="token builtin class-name">type</span> of partition I to <span class="token number">82</span> <span class="token punctuation">(</span>Linux swap / Solaris<span class="token punctuation">)</span>
+Command <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>： P												<span class="token operator">&lt;</span>---再查看一下
+
+Disk /dev/sdb: <span class="token number">21.5</span> GB, <span class="token number">21474836480</span> bytes
+<span class="token number">255</span> heads, <span class="token number">63</span> sectors/track, <span class="token number">2610</span> cylinders
+Units <span class="token operator">=</span> cylinders of <span class="token number">16065</span> * <span class="token number">512</span> <span class="token operator">=</span> <span class="token number">8225280</span> bytes
+Sector size <span class="token punctuation">(</span>logical/physical<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+I/O size <span class="token punctuation">(</span>minimum/optimal<span class="token punctuation">)</span>: <span class="token number">512</span> bytes / <span class="token number">512</span> bytes
+Disk identifier: 0x00000ebd
+Device Boot		start		End		Blocks		Id		System
+/dev/sdb1		<span class="token number">1</span>			<span class="token number">65</span>		<span class="token number">522081</span>		<span class="token number">82</span>		Linux swap / Solaris
+<span class="token comment">#修改过来了</span>
+<span class="token builtin class-name">command</span> <span class="token punctuation">(</span>m <span class="token keyword">for</span> <span class="token builtin class-name">help</span><span class="token punctuation">)</span>: w													<span class="token operator">&lt;</span>---记得保存退出
+The partition table has been altered<span class="token operator">!</span>
+
+Calling ioct1<span class="token punctuation">(</span><span class="token punctuation">)</span> to re-read partition table.
+syncing disks.
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br><span class="line-number">11</span><br><span class="line-number">12</span><br><span class="line-number">13</span><br><span class="line-number">14</span><br><span class="line-number">15</span><br><span class="line-number">16</span><br><span class="line-number">17</span><br><span class="line-number">18</span><br><span class="line-number">19</span><br><span class="line-number">20</span><br><span class="line-number">21</span><br><span class="line-number">22</span><br><span class="line-number">23</span><br><span class="line-number">24</span><br><span class="line-number">25</span><br><span class="line-number">26</span><br><span class="line-number">27</span><br><span class="line-number">28</span><br><span class="line-number">29</span><br><span class="line-number">30</span><br><span class="line-number">31</span><br><span class="line-number">32</span><br><span class="line-number">33</span><br><span class="line-number">34</span><br><span class="line-number">35</span><br><span class="line-number">36</span><br><span class="line-number">37</span><br><span class="line-number">38</span><br><span class="line-number">39</span><br><span class="line-number">40</span><br><span class="line-number">41</span><br><span class="line-number">42</span><br><span class="line-number">43</span><br><span class="line-number">44</span><br><span class="line-number">45</span><br><span class="line-number">46</span><br><span class="line-number">47</span><br></div></div><ol start="2">
+<li><strong>格式化</strong></li>
+</ol>
+<p>因为要格式化成 swap 分区，所以格式化命令是 <code>mkswap</code>。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># mkswap /dev/sdb1</span>
+Setting up swapspace version <span class="token number">1</span>, size <span class="token operator">=</span> <span class="token number">522076</span> KiB
+no label, <span class="token assign-left variable">UUID</span><span class="token operator">=</span>c3351dc3-f403-419a-9666-c24615e170fb
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br></div></div><ol start="3">
+<li><strong>使用 swap 分区</strong></li>
+</ol>
+<p>在使用 swap 分区之前，我们先来说说 <code>free</code> 命令。命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># free</span>
+              total        used        <span class="token function">free</span>      shared  buff/cache   available
+Mem:        <span class="token number">1030796</span>			<span class="token number">30792</span>	<span class="token number">900004</span>           <span class="token number">0</span>       <span class="token number">15292</span>       <span class="token number">55420</span>
+-/+ buffers/cache:			<span class="token number">60080</span>	<span class="token number">970716</span>
+Swap:       <span class="token number">2047792</span>				<span class="token number">0</span>	<span class="token number">2047792</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p><code>free</code> 命令主要是用来查看内存和 <code>swap</code> 分区的使用情况的，其中，total 是指总数，used 是指已经使用的，free 是指空闲的，shared 是指共享的，buffers 是指缓冲内存数，cached 是指缓存内存数，单位是 KB。</p>
+<p>我们需要解释一下 buffers（缓冲）和 cached（缓存）的区别。简单来讲，cached 是给读取数据时加速的，buffers 是给写入数据加速的。cached 是指把读取出来的数据保存在内存中，当再次读取时，不用读取硬盘而直接从内存中读取，加速了数据的读取过程；buffers 是指在写入数据时，先把分散的写入操作保存到内存中，当达到一定程度后再集中写入硬盘，减少了磁盘碎片和硬盘的反复寻道，加速了数据的写入过程。</p>
+<p>我们已经看到，在加载进新的 swap 分区之前，swap 分区的大小是 2000MB，接下来只要加入 swap 分区就可以了，使用命令 <code>swapon</code>。命令格式如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># swapon 分区设备文件名</span>
+
+<span class="token comment"># 例如 ：</span>
+<span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># swapon /dev/sdb1</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br></div></div><p>swap 分区已经加入，我们查看一下。</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># free</span>
+              total        used        <span class="token function">free</span>      shared  buff/cache   available
+Mem:		<span class="token number">1030796</span>		 <span class="token number">131264</span>		 <span class="token number">899532</span>			  <span class="token number">0</span>		  <span class="token number">15520</span>		  <span class="token number">55500</span>
+-/+ buffers/cache:		  <span class="token number">60244</span>		 <span class="token number">970552</span>
+Swap:		<span class="token number">2570064</span>			  <span class="token number">0</span>		<span class="token number">2570064</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br></div></div><p>swap 分区的大小变成了 2500MB，加载成功了。如果要取消新加入的 swap 分区，则也很简单，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># swapoff /dev/sdb1</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br></div></div><p>如果想让 swap 分区开机之后自动挂载，就需要修改 <code>/etc/fstab</code> 文件，命令如下：</p>
+<div class="language-bash ext-sh line-numbers-mode"><pre v-pre class="language-bash"><code><span class="token punctuation">[</span>root@localhost ~<span class="token punctuation">]</span><span class="token comment"># vi /ete/fstab</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>c2ca6f57-b15c-43ea-bca0-f239083d8bd2	/			ext4	defaults		<span class="token number">1</span> <span class="token number">1</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>0b23d315-33a7-48a4-bd37-9248e5c44345	/boot		ext4 	defaults		<span class="token number">1</span> <span class="token number">2</span>
+<span class="token assign-left variable">UUID</span><span class="token operator">=</span>4021be19-2751-4dd2-98cc-363368c39edb	swap		swap	defaults		<span class="token number">0</span> <span class="token number">0</span>
+tmpfs										/dev/shm	tmpfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+devpts										/dev/pts	devpts	<span class="token assign-left variable">gid</span><span class="token operator">=</span><span class="token number">5</span>,mode-620	<span class="token number">0</span> <span class="token number">0</span>
+sysfs										/sys		sysfs	defaults		<span class="token number">0</span> <span class="token number">0</span>
+proc										/proc		proc	defaults		<span class="token number">0</span> <span class="token number">0</span>
+/dev/sdb1									swap		swap	defaults		<span class="token number">0</span> <span class="token number">0</span>
+<span class="token comment">#加入新 swap 分区的相关内容，这里直接使用分区的设备文件名，也可以使用 UUID</span>
+</code></pre><div class="line-numbers" aria-hidden="true"><span class="line-number">1</span><br><span class="line-number">2</span><br><span class="line-number">3</span><br><span class="line-number">4</span><br><span class="line-number">5</span><br><span class="line-number">6</span><br><span class="line-number">7</span><br><span class="line-number">8</span><br><span class="line-number">9</span><br><span class="line-number">10</span><br></div></div></template>
